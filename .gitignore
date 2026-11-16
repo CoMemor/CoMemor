@@ -69,3 +69,6 @@ coverage/
 dist-benchmark/
 *.tsbuildinfo
 *.tgz
+
+# Raw design assets
+Logo maker project*.png
