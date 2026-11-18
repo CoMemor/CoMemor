@@ -222,11 +222,13 @@ export class MemoryService {
 
   /**
    * Reconciles the secondary SQLite projection with the canonical JSONL log on startup.
+   * F-03 FIX: passes the canonical file path so SqliteIndex can fingerprint-check it.
    */
   reconcileOnStartup(): void {
     try {
+      const jsonlPath = path.join(this.memoryDir, 'records.jsonl');
       const canonicalRecords = this.jsonl.readAllSync();
-      const result = this.sqlite.reconcileWithCanonical(canonicalRecords);
+      const result = this.sqlite.reconcileWithCanonical(canonicalRecords, jsonlPath);
       if (result.rebuilt) {
         this.logger.info(
           { event: 'storage_reconciled', count: result.syncedCount },
@@ -381,7 +383,8 @@ export class MemoryService {
       this.sqlite.markIndexDirty(true);
       try {
         const canonical = await this.jsonl.readAll();
-        this.sqlite.reconcileWithCanonical(canonical);
+        const jsonlPath = path.join(this.memoryDir, 'records.jsonl');
+        this.sqlite.reconcileWithCanonical(canonical, jsonlPath);
       } catch (rebuildErr) {
         this.logger.error(
           { event: 'sqlite_rebuild_error', error: String(rebuildErr) },

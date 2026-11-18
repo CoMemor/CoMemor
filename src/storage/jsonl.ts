@@ -9,6 +9,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { lock, lockSync } from 'proper-lockfile';
 import type { MemoryRecord } from '../types.js';
 
@@ -118,6 +119,7 @@ export class JsonlStorage {
   /**
    * Synchronously reads all records from the JSONL file.
    * Useful for synchronous startup reconciliation.
+   * C-03 / X-04 FIX: logs a SHA-256 hash of corrupted bytes instead of raw content.
    */
   readAllSync(): MemoryRecord[] {
     if (!fs.existsSync(this.filePath)) {
@@ -130,14 +132,15 @@ export class JsonlStorage {
       try {
         records.push(JSON.parse(lines[i] ?? '') as MemoryRecord);
       } catch {
+        // X-04 FIX: never log raw content — hash only to avoid exposing secrets.
         process.stderr.write(
           JSON.stringify({
             level: 'warn',
             event: 'jsonl_corrupted_line',
             file: this.filePath,
             lineNumber: i + 1,
-            preview: (lines[i] ?? '').slice(0, 80),
-            recovery: 'line skipped; re-run index rebuild from valid lines',
+            corruptedLineHash: createHash('sha256').update(lines[i] ?? '').digest('hex'),
+            recovery: 'line skipped; original file preserved; rebuild index from valid lines',
           }) + '\n',
         );
       }
@@ -148,7 +151,7 @@ export class JsonlStorage {
   /**
    * Reads all records from the JSONL file.
    * Corrupted lines (invalid JSON) are skipped with a stderr warning.
-   * Recovery: re-run the SQLite index rebuild from valid lines only.
+   * C-03 / X-04 FIX: logs a SHA-256 hash of the corrupted bytes instead of raw content.
    */
   async readAll(): Promise<MemoryRecord[]> {
     if (!fs.existsSync(this.filePath)) {
@@ -161,16 +164,15 @@ export class JsonlStorage {
       try {
         records.push(JSON.parse(lines[i] ?? '') as MemoryRecord);
       } catch {
-        // CORRUPTED LINE: log to stderr (never stdout) and skip.
-        // The SQLite index remains authoritative; re-index by re-reading valid records.
+        // X-04 FIX: never log raw content — hash only to avoid exposing secrets.
         process.stderr.write(
           JSON.stringify({
             level: 'warn',
             event: 'jsonl_corrupted_line',
             file: this.filePath,
             lineNumber: i + 1,
-            preview: (lines[i] ?? '').slice(0, 80),
-            recovery: 'line skipped; re-run index rebuild from valid lines',
+            corruptedLineHash: createHash('sha256').update(lines[i] ?? '').digest('hex'),
+            recovery: 'line skipped; original file preserved; rebuild index from valid lines',
           }) + '\n',
         );
       }

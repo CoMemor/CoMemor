@@ -100,8 +100,12 @@ describe('Storage Reliability & Deterministic Recovery', () => {
       const parsedLog = JSON.parse(stderrMessages[0]!);
       expect(parsedLog.event).toBe('jsonl_corrupted_line');
       expect(parsedLog.lineNumber).toBe(5);
-      expect(parsedLog.preview).toContain('rec_005');
-      expect(parsedLog.recovery).toContain('line skipped; re-run index rebuild');
+      // C-03 / X-04: raw content must NOT appear; only a SHA-256 hash is logged.
+      expect(parsedLog.corruptedLineHash).toBeDefined();
+      expect(typeof parsedLog.corruptedLineHash).toBe('string');
+      expect(parsedLog.corruptedLineHash).toHaveLength(64);
+      expect(parsedLog).not.toHaveProperty('preview');
+      expect(parsedLog.recovery).toContain('line skipped');
     } finally {
       process.stderr.write = origStderrWrite;
     }

@@ -1,13 +1,40 @@
 /**
  * SQLite as rebuildable secondary index using node:sqlite DatabaseSync with FTS5.
  * ADR-003 compliant.
+ *
+ * Phase 2 hardening:
+ *  - C-02: indexRecord() wraps relational + FTS5 ops in one SQLite SAVEPOINT so
+ *          both succeed or both roll back; dirty flag set on any failure.
+ *  - X-01: rebuildIndex() uses a single BEGIN IMMEDIATE transaction that includes
+ *          all relational, FTS5, and metadata writes via private _indexRecordStatements().
+ *  - F-03: reconcileWithCanonical() accepts an optional canonicalFilePath and
+ *          hashes the file bytes (SHA-256) to detect same-count/same-ID edits.
+ *          canonical_records_sha256, canonical_records_size, index_schema_version,
+ *          and last_reconciled_at are stored in index_metadata.
  */
 
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import type { MemoryRecord } from '../types.js';
 import { extractCommandFamily } from '../core/match.js';
+
+/** Bump this when the schema changes incompatibly; triggers a forced rebuild. */
+const INDEX_SCHEMA_VERSION = 2;
+
+/** Compute SHA-256 hex + byte size of a file; returns null if the file is absent. */
+function hashFile(filePath: string): { sha256: string; size: number } | null {
+  try {
+    const bytes = fs.readFileSync(filePath);
+    return {
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+      size: bytes.byteLength,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export class SqliteIndex {
   private db: DatabaseSync;
@@ -53,121 +80,181 @@ export class SqliteIndex {
         value TEXT NOT NULL
       );
     `);
+
+    // Ensure schema-version metadata exists so we can detect version bumps.
+    this._setMetaIfAbsent('index_schema_version', String(INDEX_SCHEMA_VERSION));
   }
+
+  // ─── Metadata helpers ────────────────────────────────────────────────────────
+
+  private _getMeta(key: string): string | undefined {
+    try {
+      const row = this.db
+        .prepare('SELECT value FROM index_metadata WHERE key = ?')
+        .get(key) as { value: string } | undefined;
+      return row?.value;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private _setMeta(key: string, value: string): void {
+    try {
+      this.db
+        .prepare(
+          `INSERT INTO index_metadata (key, value) VALUES (?, ?)
+           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
+        .run(key, value);
+    } catch {
+      // Non-fatal metadata write; swallow so callers degrade gracefully.
+    }
+  }
+
+  private _setMetaIfAbsent(key: string, value: string): void {
+    try {
+      this.db
+        .prepare(`INSERT OR IGNORE INTO index_metadata (key, value) VALUES (?, ?)`)
+        .run(key, value);
+    } catch {
+      // Non-fatal
+    }
+  }
+
+  // ─── Public metadata API ─────────────────────────────────────────────────────
 
   /**
    * Checks whether the secondary SQLite index has been flagged as dirty.
    */
   isIndexDirty(): boolean {
-    try {
-      const row = this.db
-        .prepare("SELECT value FROM index_metadata WHERE key = 'is_dirty'")
-        .get() as { value: string } | undefined;
-      return row?.value === 'true';
-    } catch {
-      return true;
-    }
+    return this._getMeta('is_dirty') === 'true';
   }
 
   /**
    * Marks the secondary index dirty or clean in index_metadata.
    */
   markIndexDirty(isDirty: boolean): void {
-    try {
-      this.db
-        .prepare(
-          `
-        INSERT INTO index_metadata (key, value) VALUES ('is_dirty', ?)
-        ON CONFLICT(key) DO UPDATE SET value = excluded.value
-      `,
-        )
-        .run(isDirty ? 'true' : 'false');
-    } catch {
-      // In case of database lock or disk failure, log or degrade gracefully
-    }
+    this._setMeta('is_dirty', isDirty ? 'true' : 'false');
   }
 
   /**
    * Retrieves the count of records recorded during last reconciliation.
    */
   getLastReconciledRecordCount(): number {
-    try {
-      const row = this.db
-        .prepare("SELECT value FROM index_metadata WHERE key = 'reconciled_count'")
-        .get() as { value: string } | undefined;
-      return row ? parseInt(row.value, 10) : 0;
-    } catch {
-      return 0;
-    }
+    const v = this._getMeta('reconciled_count');
+    return v ? parseInt(v, 10) : 0;
   }
 
   /**
    * Persists the count of records recorded during last reconciliation.
    */
   setLastReconciledRecordCount(count: number): void {
-    try {
-      this.db
-        .prepare(
-          `
-        INSERT INTO index_metadata (key, value) VALUES ('reconciled_count', ?)
-        ON CONFLICT(key) DO UPDATE SET value = excluded.value
-      `,
-        )
-        .run(String(count));
-    } catch {
-      // Ignore non-fatal metadata write error
-    }
+    this._setMeta('reconciled_count', String(count));
   }
 
-  indexRecord(record: MemoryRecord): void {
+  // ─── Indexing ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Raw SQL ops for one record — called both by indexRecord() (which wraps in a
+   * SAVEPOINT) and by rebuildIndex() (which includes these inside its own
+   * BEGIN IMMEDIATE transaction, avoiding nested transactions entirely).
+   */
+  private _indexRecordStatements(record: MemoryRecord): void {
     const commandFamily = extractCommandFamily(record.command);
     const isQuarantined = record.poisoningFlag !== null ? 1 : 0;
 
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO records (
-        id, fingerprint, command, command_family, exit_code, repository_id, created_at, normalizer_version, is_quarantined, data
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    this.db
+      .prepare(
+        `INSERT OR REPLACE INTO records (
+           id, fingerprint, command, command_family, exit_code, repository_id,
+           created_at, normalizer_version, is_quarantined, data
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        record.id,
+        record.fingerprint,
+        record.command,
+        commandFamily,
+        record.exitCode,
+        record.repositoryId,
+        record.createdAt,
+        record.normalizerVersion,
+        isQuarantined,
+        JSON.stringify(record),
+      );
 
-    stmt.run(
-      record.id,
-      record.fingerprint,
-      record.command,
-      commandFamily,
-      record.exitCode,
-      record.repositoryId,
-      record.createdAt,
-      record.normalizerVersion,
-      isQuarantined,
-      JSON.stringify(record),
-    );
+    // FTS5 — must succeed or the whole unit rolls back (no silent swallow).
+    this.db.prepare('DELETE FROM records_fts WHERE id = ?').run(record.id);
+    this.db
+      .prepare('INSERT INTO records_fts (id, normalized_output) VALUES (?, ?)')
+      .run(record.id, record.normalizedOutput);
+  }
 
-    // Maintain FTS5 index
+  /**
+   * Indexes a single record.
+   * C-02 / X-01 FIX: Both the relational INSERT and the FTS5 DELETE+INSERT are
+   * wrapped in a SAVEPOINT so they succeed or roll back together.
+   * On any failure the dirty flag is set and the error is re-thrown.
+   */
+  indexRecord(record: MemoryRecord): void {
+    this.db.exec('SAVEPOINT sp_index_record');
     try {
-      this.db.prepare('DELETE FROM records_fts WHERE id = ?').run(record.id);
-      this.db
-        .prepare('INSERT INTO records_fts (id, normalized_output) VALUES (?, ?)')
-        .run(record.id, record.normalizedOutput);
-    } catch {
-      // Fallback if FTS5 is not required
+      this._indexRecordStatements(record);
+      this.db.exec('RELEASE SAVEPOINT sp_index_record');
+    } catch (e) {
+      try { this.db.exec('ROLLBACK TO SAVEPOINT sp_index_record'); } catch { /* best-effort */ }
+      try { this.db.exec('RELEASE SAVEPOINT sp_index_record'); } catch { /* best-effort */ }
+      this.markIndexDirty(true);
+      throw e;
     }
   }
 
   /**
    * Rebuilds the SQLite index transactionally from an array of MemoryRecords.
+   * X-01 FIX: Every relational INSERT, FTS5 write, dirty-flag write, and
+   * count write happen inside ONE BEGIN IMMEDIATE transaction by calling
+   * _indexRecordStatements() directly (no nested SAVEPOINTs).
    */
-  rebuildIndex(records: MemoryRecord[]): void {
+  rebuildIndex(
+    records: MemoryRecord[],
+    fingerprint?: { sha256: string; size: number } | null,
+  ): void {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       this.db.exec('DELETE FROM records; DELETE FROM records_fts;');
       for (const record of records) {
-        this.indexRecord(record);
+        this._indexRecordStatements(record);
       }
-      this.markIndexDirty(false);
-      this.setLastReconciledRecordCount(records.length);
+      // Write all metadata inside the same transaction.
+      this.db
+        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('is_dirty', 'false')
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .run();
+      this.db
+        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('reconciled_count', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .run(String(records.length));
+      this.db
+        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('index_schema_version', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .run(String(INDEX_SCHEMA_VERSION));
+      this.db
+        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('last_reconciled_at', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .run(new Date().toISOString());
+      if (fingerprint) {
+        this.db
+          .prepare(`INSERT INTO index_metadata (key, value) VALUES ('canonical_records_sha256', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+          .run(fingerprint.sha256);
+        this.db
+          .prepare(`INSERT INTO index_metadata (key, value) VALUES ('canonical_records_size', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+          .run(String(fingerprint.size));
+      }
       this.db.exec('COMMIT');
     } catch (e) {
-      this.db.exec('ROLLBACK');
+      try { this.db.exec('ROLLBACK'); } catch { /* best-effort */ }
       this.markIndexDirty(true);
       throw e;
     }
@@ -175,25 +262,59 @@ export class SqliteIndex {
 
   /**
    * Reconciles the secondary SQLite projection against canonical records from JSONL.
-   * If SQLite is marked dirty, record counts mismatch, or IDs are missing,
-   * a transactional rebuild is executed automatically.
+   *
+   * F-03 FIX: When canonicalFilePath is provided the file bytes are SHA-256 hashed
+   * and compared against the stored fingerprint. A rebuild is triggered even when
+   * record count and IDs match (catches silent in-place edits).
+   *
+   * Rebuild triggers (in order):
+   *  1. Dirty flag is set
+   *  2. Schema version mismatch
+   *  3. Count mismatch
+   *  4. Canonical file fingerprint mismatch (requires canonicalFilePath)
+   *  5. Any canonical ID missing from SQLite
    */
-  reconcileWithCanonical(canonicalRecords: MemoryRecord[]): {
-    rebuilt: boolean;
-    syncedCount: number;
-  } {
+  reconcileWithCanonical(
+    canonicalRecords: MemoryRecord[],
+    canonicalFilePath?: string,
+  ): { rebuilt: boolean; syncedCount: number } {
     const isDirty = this.isIndexDirty();
+
+    // Schema version check — force rebuild on version bump.
+    const storedSchemaVersion = parseInt(this._getMeta('index_schema_version') ?? '0', 10);
+    if (isDirty || storedSchemaVersion !== INDEX_SCHEMA_VERSION) {
+      const fp = canonicalFilePath ? hashFile(canonicalFilePath) : null;
+      this.rebuildIndex(canonicalRecords, fp);
+      return { rebuilt: true, syncedCount: canonicalRecords.length };
+    }
+
     const countRow = this.db.prepare('SELECT COUNT(*) as count FROM records').get() as
       | { count: number }
       | undefined;
     const sqliteCount = countRow?.count ?? 0;
 
-    if (isDirty || sqliteCount !== canonicalRecords.length) {
-      this.rebuildIndex(canonicalRecords);
+    if (sqliteCount !== canonicalRecords.length) {
+      const fp = canonicalFilePath ? hashFile(canonicalFilePath) : null;
+      this.rebuildIndex(canonicalRecords, fp);
       return { rebuilt: true, syncedCount: canonicalRecords.length };
     }
 
-    // Verify all canonical IDs exist in SQLite
+    // F-03: fingerprint check — detect same-count/same-ID in-place edits.
+    if (canonicalFilePath) {
+      const currentFp = hashFile(canonicalFilePath);
+      const storedSha = this._getMeta('canonical_records_sha256');
+      if (currentFp && storedSha && currentFp.sha256 !== storedSha) {
+        this.rebuildIndex(canonicalRecords, currentFp);
+        return { rebuilt: true, syncedCount: canonicalRecords.length };
+      }
+      // No stored fingerprint yet — store it now for future comparisons.
+      if (currentFp && !storedSha) {
+        this._setMeta('canonical_records_sha256', currentFp.sha256);
+        this._setMeta('canonical_records_size', String(currentFp.size));
+      }
+    }
+
+    // ID membership check.
     const existingIds = new Set(
       (this.db.prepare('SELECT id FROM records').all() as { id: string }[]).map((r) => r.id),
     );
@@ -206,14 +327,26 @@ export class SqliteIndex {
     }
 
     if (missingFound) {
-      this.rebuildIndex(canonicalRecords);
+      const fp = canonicalFilePath ? hashFile(canonicalFilePath) : null;
+      this.rebuildIndex(canonicalRecords, fp);
       return { rebuilt: true, syncedCount: canonicalRecords.length };
     }
 
-    this.markIndexDirty(false);
-    this.setLastReconciledRecordCount(canonicalRecords.length);
+    // Index is consistent — update lightweight metadata without a full rebuild.
+    this._setMeta('is_dirty', 'false');
+    this._setMeta('reconciled_count', String(canonicalRecords.length));
+    this._setMeta('last_reconciled_at', new Date().toISOString());
+    if (canonicalFilePath) {
+      const fp = hashFile(canonicalFilePath);
+      if (fp) {
+        this._setMeta('canonical_records_sha256', fp.sha256);
+        this._setMeta('canonical_records_size', String(fp.size));
+      }
+    }
     return { rebuilt: false, syncedCount: canonicalRecords.length };
   }
+
+  // ─── Query API ────────────────────────────────────────────────────────────────
 
   findByFingerprint(
     fingerprint: string,
