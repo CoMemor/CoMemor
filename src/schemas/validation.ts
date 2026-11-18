@@ -53,3 +53,13 @@ export const VerifyFixZodSchema = z.object({
 export const MemoryStatsZodSchema = z.object({
   repositoryId: z.string().max(MAX_ID_LEN).optional(),
 });
+
+export const RecordVerificationOutcomeZodSchema = z.object({
+  recordId: z.string().min(1).max(128),
+  attemptId: z.string().min(1).max(128),
+  outcome: z.enum(['passed', 'failed']),
+  method: z.enum(['host_reported', 'human_confirmed']),
+  reportedAt: z.string().datetime().optional(),
+  evidenceRef: z.string().max(512).optional(),
+  note: z.string().max(1024).optional(),
+});

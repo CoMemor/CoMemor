@@ -139,3 +139,49 @@ export const LIST_MEMORY_STATS_SCHEMA: ToolInputSchema = {
   },
   additionalProperties: false,
 };
+
+export const RECORD_VERIFICATION_OUTCOME_SCHEMA: ToolInputSchema = {
+  type: 'object',
+  properties: {
+    recordId: {
+      type: 'string',
+      description: 'The ID of the memory record for which the outcome is being reported.',
+      maxLength: 128,
+    },
+    attemptId: {
+      type: 'string',
+      description:
+        'Caller-provided idempotency key. Use a fresh UUID v4 per unique verification attempt. Resubmitting the same attemptId with matching params is idempotent; with different params is rejected as a conflict.',
+      maxLength: 128,
+    },
+    outcome: {
+      type: 'string',
+      enum: ['passed', 'failed'],
+      description: 'The observed outcome of applying the fix.',
+    },
+    method: {
+      type: 'string',
+      enum: ['host_reported', 'human_confirmed'],
+      description:
+        'How the outcome was determined. host_reported = agent-detected, human_confirmed = user manually confirmed.',
+    },
+    reportedAt: {
+      type: 'string',
+      description: 'Optional ISO-8601 timestamp when the outcome was observed (caller clock).',
+    },
+    evidenceRef: {
+      type: 'string',
+      description:
+        'Optional bounded reference to evidence (e.g. CI run ID, test report path). Max 512 chars. Never include raw logs here.',
+      maxLength: 512,
+    },
+    note: {
+      type: 'string',
+      description:
+        'Optional free-text note about the outcome. Redacted before storage. Max 1024 chars.',
+      maxLength: 1024,
+    },
+  },
+  required: ['recordId', 'attemptId', 'outcome', 'method'],
+  additionalProperties: false,
+};

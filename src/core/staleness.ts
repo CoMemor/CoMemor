@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import type { MemoryRecord } from '../types.js';
+import type { MemoryRecord, VerificationSummary } from '../types.js';
 
 const KNOWN_LOCKFILES = [
   'package-lock.json',
@@ -70,12 +70,16 @@ export function calculateWilsonScoreLowerBound(
  * - Normalizer version mismatch
  * - Verification failure or low Wilson score
  * - TTL expiration (90 days)
+ *
+ * When a VerificationSummary is provided (from the event store), it takes
+ * precedence over the legacy record.verification fields for staleness decisions.
  */
 export function checkRecordStaleness(
   record: MemoryRecord,
   workspaceRoot: string,
   currentNormalizerVersion: number,
   now: Date = new Date(),
+  summary?: VerificationSummary | null,
 ): { isStale: boolean; staleReasons: string[] } {
   const staleReasons: string[] = [];
 
@@ -97,16 +101,28 @@ export function checkRecordStaleness(
     }
   }
 
-  // 3. Verification status
-  if (record.verification.status === 'failed') {
-    staleReasons.push('Latest verification failed for this fix');
-  } else if (
-    record.verification.wilsonLowerBound !== null &&
-    record.verification.wilsonLowerBound < 0.4
-  ) {
-    staleReasons.push(
-      `Low verification confidence score (Wilson lower bound: ${String(record.verification.wilsonLowerBound)})`,
-    );
+  // 3. Verification status — prefer event-store summary when available
+  if (summary !== undefined && summary !== null) {
+    // Event-store-based staleness check
+    if (summary.latestOutcome === 'failed') {
+      staleReasons.push('Latest verification failed for this fix');
+    } else if (summary.wilsonLowerBound !== null && summary.wilsonLowerBound < 0.4) {
+      staleReasons.push(
+        `Low verification confidence score (Wilson lower bound: ${String(summary.wilsonLowerBound)})`,
+      );
+    }
+  } else {
+    // Legacy fallback: use record.verification fields
+    if (record.verification.status === 'failed') {
+      staleReasons.push('Latest verification failed for this fix');
+    } else if (
+      record.verification.wilsonLowerBound !== null &&
+      record.verification.wilsonLowerBound < 0.4
+    ) {
+      staleReasons.push(
+        `Low verification confidence score (Wilson lower bound: ${String(record.verification.wilsonLowerBound)})`,
+      );
+    }
   }
 
   // 4. TTL expiration (90 days)

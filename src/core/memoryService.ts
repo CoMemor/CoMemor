@@ -3,7 +3,7 @@
  *
  * Phase 1 hardening:
  * - XML-escaping on sanitization envelope (F-17 fix)
- * - Git provenance collection at record time (optional — degrades gracefully)
+ * - Git provenance collection at record time (optional â€” degrades gracefully)
  * - Real pendingApprovals count from JSONL files
  */
 
@@ -20,11 +20,16 @@ import type {
   FindFixOutput,
   FindFixMatch,
   MemoryStatsOutput,
+  RecordVerificationOutcomeInput,
+  RecordVerificationOutcomeOutput,
+  VerificationEvent,
+  VerificationSummary,
 } from '../types.js';
 import {
   RecordFailureZodSchema,
   FindFixZodSchema,
   MemoryStatsZodSchema,
+  RecordVerificationOutcomeZodSchema,
 } from '../schemas/validation.js';
 import { redactSensitiveData } from './redact.js';
 import { normalizeOutput, CURRENT_NORMALIZER_VERSION } from './normalize.js';
@@ -36,6 +41,7 @@ import { CommandPolicyEngine } from '../policy/commandPolicy.js';
 import { createMemoryLogger, type MemoryLogger } from './logger.js';
 import { JsonlStorage } from '../storage/jsonl.js';
 import { SqliteIndex } from '../storage/index.js';
+import { VerificationEventStore, computeSummary } from '../storage/verificationEvents.js';
 import type { VerifyFixInput, VerifyFixOutput } from '../types.js';
 import { VerifyFixZodSchema } from '../schemas/validation.js';
 
@@ -151,7 +157,7 @@ export function countPendingApprovals(memoryDir: string): number {
         }
       }
     } catch {
-      // unreadable file — treat as empty
+      // unreadable file â€” treat as empty
     }
     return ids;
   }
@@ -179,6 +185,7 @@ export class MemoryService {
   private jsonl: JsonlStorage;
   private sqlite: SqliteIndex;
   private commandPolicy: CommandPolicyEngine;
+  private verificationEventStore: VerificationEventStore;
 
   constructor(options: MemoryServiceOptions) {
     this.memoryDir = options.memoryDir;
@@ -195,6 +202,9 @@ export class MemoryService {
     this.sqlite = new SqliteIndex(dbPath);
 
     this.commandPolicy = new CommandPolicyEngine(this.workspaceRoot, this.memoryDir);
+
+    const eventsPath = path.join(this.memoryDir, 'verification-events.jsonl');
+    this.verificationEventStore = new VerificationEventStore(eventsPath);
 
     this.logger.info(
       {
@@ -312,7 +322,7 @@ export class MemoryService {
       ...redactedFixCommands,
     ]).flag;
 
-    // 5. Collect git provenance (optional — never fails the operation)
+    // 5. Collect git provenance (optional â€” never fails the operation)
     const gitProvenance = await collectGitProvenance(this.workspaceRoot);
 
     const id = `rec_${uuidv4().replace(/-/g, '').slice(0, 12)}`;
@@ -360,7 +370,7 @@ export class MemoryService {
     // 6. Append to JSONL canonical source of truth FIRST (under advisory cross-process lock)
     await this.jsonl.append(record);
 
-    // 7. Update secondary SQLite index projection — if it fails, mark dirty and attempt self-healing rebuild
+    // 7. Update secondary SQLite index projection â€” if it fails, mark dirty and attempt self-healing rebuild
     try {
       this.sqlite.indexRecord(record);
     } catch (sqliteErr) {
@@ -441,10 +451,16 @@ export class MemoryService {
       seenIds.add(exactRecord.id);
       const trustScore = this.computeProvenanceTrust(exactRecord, 1.0);
       const envelope = this.buildSanitizationEnvelope(exactRecord, trustScore);
+      const verificationSummary = this.verificationEventStore.getSummary(
+        exactRecord.id,
+        this.repositoryId,
+      );
       const staleness = checkRecordStaleness(
         exactRecord,
         this.workspaceRoot,
         CURRENT_NORMALIZER_VERSION,
+        new Date(),
+        verificationSummary,
       );
       matches.push({
         id: exactRecord.id,
@@ -463,6 +479,7 @@ export class MemoryService {
         isStale: staleness.isStale,
         provenance: exactRecord.provenance,
         isQuarantined: exactRecord.poisoningFlag !== null,
+        verificationSummary,
       });
     }
 
@@ -486,10 +503,16 @@ export class MemoryService {
         if (similarity >= input.threshold) {
           seenIds.add(candidate.id);
           const trustScore = this.computeProvenanceTrust(candidate, similarity);
+          const candidateSummary = this.verificationEventStore.getSummary(
+            candidate.id,
+            this.repositoryId,
+          );
           const staleness = checkRecordStaleness(
             candidate,
             this.workspaceRoot,
             CURRENT_NORMALIZER_VERSION,
+            new Date(),
+            candidateSummary,
           );
           const envelope = this.buildSanitizationEnvelope(candidate, trustScore);
 
@@ -510,6 +533,7 @@ export class MemoryService {
             isStale: staleness.isStale,
             provenance: candidate.provenance,
             isQuarantined: candidate.poisoningFlag !== null,
+            verificationSummary: candidateSummary,
           });
         }
       }
@@ -573,11 +597,129 @@ export class MemoryService {
     if (result.status === 'pending_approval') {
       this.logger.info(
         { event: 'verify_fix_queued', recordId: input.recordId, approvalId: result.approvalId },
-        'Live execution requested — queued approval; use host agent execution mechanisms',
+        'Live execution requested â€” queued approval; use host agent execution mechanisms',
       );
     }
 
     return result;
+  }
+
+  /**
+   * Records a verification outcome event for a known record.
+   */
+  async recordVerificationOutcome(
+    rawInput: RecordVerificationOutcomeInput,
+  ): Promise<RecordVerificationOutcomeOutput> {
+    const input = RecordVerificationOutcomeZodSchema.parse(rawInput);
+
+    // 1. Verify the record exists in SQLite
+    const record = this.sqlite.findById(input.recordId);
+    if (!record) {
+      throw new Error(`Record not found: ${input.recordId}`);
+    }
+
+    // 2. Verify repositoryId matches
+    if (record.repositoryId !== this.repositoryId) {
+      throw new Error(
+        `Record ${input.recordId} belongs to repository '${record.repositoryId}', not '${this.repositoryId}'`,
+      );
+    }
+
+    // 3. Check idempotency
+    const idempotencyResult = this.verificationEventStore.checkIdempotency(
+      input.attemptId,
+      input.recordId,
+      input.outcome,
+      input.method,
+    );
+
+    if (idempotencyResult === 'conflict') {
+      const summary = this.verificationEventStore.getSummary(input.recordId, this.repositoryId);
+      return {
+        eventId: '',
+        status: 'conflict_rejected',
+        summary: summary ?? {
+          attemptCount: 0,
+          successCount: 0,
+          failureCount: 0,
+          latestOutcome: null,
+          latestOutcomeAt: null,
+          latestMethod: null,
+          wilsonLowerBound: null,
+        },
+        message: `Attempt ID '${input.attemptId}' was already recorded with different parameters. This event was rejected.`,
+      };
+    }
+
+    if (idempotencyResult === 'duplicate') {
+      const summary = this.verificationEventStore.getSummary(input.recordId, this.repositoryId);
+      return {
+        eventId: '',
+        status: 'duplicate_idempotent',
+        summary: summary ?? {
+          attemptCount: 0,
+          successCount: 0,
+          failureCount: 0,
+          latestOutcome: null,
+          latestOutcomeAt: null,
+          latestMethod: null,
+          wilsonLowerBound: null,
+        },
+        message: `Attempt ID '${input.attemptId}' was already recorded with the same parameters. No new event written.`,
+      };
+    }
+
+    // 4. Redact note if present
+    const redactedNote = input.note ? redactSensitiveData(input.note) : undefined;
+
+    // 5. Build event
+    const eventId = this.verificationEventStore.generateEventId();
+    const event: VerificationEvent = {
+      schemaVersion: 1,
+      eventId,
+      attemptId: input.attemptId,
+      recordId: input.recordId,
+      repositoryId: this.repositoryId,
+      outcome: input.outcome,
+      method: input.method,
+      recordedAt: new Date().toISOString(),
+      ...(input.reportedAt !== undefined && { reportedAt: input.reportedAt }),
+      ...(input.evidenceRef !== undefined && { evidenceRef: input.evidenceRef }),
+      ...(redactedNote !== undefined && { note: redactedNote }),
+    };
+
+    // 6. Append under lock
+    await this.verificationEventStore.append(event);
+
+    // 7. Return updated summary
+    const summary = this.verificationEventStore.getSummary(input.recordId, this.repositoryId);
+    const finalSummary: VerificationSummary = summary ?? {
+      attemptCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      latestOutcome: null,
+      latestOutcomeAt: null,
+      latestMethod: null,
+      wilsonLowerBound: null,
+    };
+
+    this.logger.info(
+      {
+        event: 'verification_outcome_recorded',
+        eventId,
+        recordId: input.recordId,
+        outcome: input.outcome,
+        method: input.method,
+      },
+      `Verification outcome recorded for record ${input.recordId}`,
+    );
+
+    return {
+      eventId,
+      status: 'recorded',
+      summary: finalSummary,
+      message: `Verification outcome ${String(input.outcome)} recorded for record ${input.recordId}.`,
+    };
   }
 
   /**
@@ -587,11 +729,44 @@ export class MemoryService {
     const input = MemoryStatsZodSchema.parse(rawInput ?? {});
     const stats = this.sqlite.getStats(input.repositoryId);
 
+    // Count events by outcome across all records
+    const allEvents = this.verificationEventStore.readAllSync();
+
+    // Group events by recordId, deduplicate by attemptId (first wins)
+    const perRecord = new Map<string, { passed: boolean; failed: boolean }>();
+    const seenAttemptIds = new Set<string>();
+    for (const ev of allEvents) {
+      // Scope to current repository if repositoryId filter is active
+      if (input.repositoryId && ev.repositoryId !== input.repositoryId) continue;
+      if (!input.repositoryId && ev.repositoryId !== this.repositoryId) continue;
+      if (seenAttemptIds.has(ev.attemptId)) continue;
+      seenAttemptIds.add(ev.attemptId);
+      const existing = perRecord.get(ev.recordId) ?? { passed: false, failed: false };
+      if (ev.outcome === 'passed') existing.passed = true;
+      if (ev.outcome === 'failed') existing.failed = true;
+      perRecord.set(ev.recordId, existing);
+    }
+
+    let successfulVerificationsCount = 0;
+    let failedVerificationsCount = 0;
+    for (const v of perRecord.values()) {
+      if (v.passed) {
+        successfulVerificationsCount++;
+      } else if (v.failed) {
+        failedVerificationsCount++;
+      }
+    }
+    const recordsWithEvents = perRecord.size;
+    const unverifiedRecordsCount = Math.max(0, stats.total - recordsWithEvents);
+
     return {
       totalRecords: stats.total,
       exactFingerprints: stats.exactFingerprints,
-      verifiedFixesCount: stats.verifiedCount,
-      unverifiedCount: stats.total - stats.verifiedCount,
+      verifiedFixesCount: successfulVerificationsCount, // deprecated alias
+      successfulVerificationsCount,
+      failedVerificationsCount,
+      unverifiedRecordsCount,
+      unverifiedCount: unverifiedRecordsCount,
       quarantinedCount: stats.quarantined,
       pendingApprovalsCount: countPendingApprovals(this.memoryDir),
       normalizerVersion: CURRENT_NORMALIZER_VERSION,

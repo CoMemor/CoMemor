@@ -28,12 +28,14 @@ import {
   FIND_FIX_SCHEMA,
   VERIFY_FIX_SCHEMA,
   LIST_MEMORY_STATS_SCHEMA,
+  RECORD_VERIFICATION_OUTCOME_SCHEMA,
 } from './schemas/toolSchemas.js';
 import type {
   RecordFailureInput,
   FindFixInput,
   MemoryStatsInput,
   VerifyFixInput,
+  RecordVerificationOutcomeInput,
 } from './types.js';
 
 import fs from 'node:fs';
@@ -307,6 +309,15 @@ const TOOLS: Tool[] = [
     description: 'Returns aggregate statistics about the repository memory store.',
     inputSchema: LIST_MEMORY_STATS_SCHEMA,
   },
+  {
+    name: 'record_verification_outcome',
+    description:
+      'Records a caller-asserted verification outcome (passed or failed) for a memory record. ' +
+      'Outcomes accumulate in an append-only event log and drive honest Wilson-score confidence. ' +
+      'Idempotent by attemptId: re-submitting the same attempt with the same params is a no-op. ' +
+      'All outcomes are caller assertions — CoMemor cannot independently verify them.',
+    inputSchema: RECORD_VERIFICATION_OUTCOME_SCHEMA,
+  },
 ];
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -427,6 +438,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               text: JSON.stringify(result, null, 2),
             },
           ],
+        };
+      }
+
+      case 'record_verification_outcome': {
+        const result = await service.recordVerificationOutcome(
+          args as unknown as RecordVerificationOutcomeInput,
+        );
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
         };
       }
 
