@@ -34,7 +34,7 @@ import {
 import { redactSensitiveData } from './redact.js';
 import { normalizeOutput, CURRENT_NORMALIZER_VERSION } from './normalize.js';
 import { generateFingerprint } from './fingerprint.js';
-import { extractCommandFamily, calculateSimilarity, computeRecordAge } from './match.js';
+import { extractCommandFamily, calculateSimilarity, calculateTokenJaccard, calculateTrigramSimilarity, computeRecordAge } from './match.js';
 import { getLockfileHashes, checkRecordStaleness } from './staleness.js';
 import { detectPoisoningInRecord } from './poisonDetector.js';
 import { CommandPolicyEngine } from '../policy/commandPolicy.js';
@@ -42,6 +42,8 @@ import { createMemoryLogger, type MemoryLogger } from './logger.js';
 import { JsonlStorage } from '../storage/jsonl.js';
 import { SqliteIndex } from '../storage/index.js';
 import { VerificationEventStore, computeSummary } from '../storage/verificationEvents.js';
+import { extractDiagnosticSignals } from './diagnostics.js';
+import type { RetrievalExplanation } from '../types.js';
 import type { VerifyFixInput, VerifyFixOutput } from '../types.js';
 import { VerifyFixZodSchema } from '../schemas/validation.js';
 
@@ -465,6 +467,16 @@ export class MemoryService {
         new Date(),
         verificationSummary,
       );
+      const explanation: RetrievalExplanation = {
+        candidateSource: 'exact_fingerprint',
+        diagnosticSignals: { errorCodes: [], exceptionNames: [], filePaths: [], packageVersions: [], technicalTokens: [] },
+        tokenJaccardScore: 1.0,
+        trigramScore: 1.0,
+        repositoryFilter: this.repositoryId,
+        commandFamilyFilter: commandFamily,
+        stalenessEffect: staleness.isStale ? staleness.staleReasons.join('; ') : null,
+        acceptanceReason: 'Exact SHA-256 fingerprint match',
+      };
       matches.push({
         id: exactRecord.id,
         matchType: 'exact',
@@ -483,24 +495,29 @@ export class MemoryService {
         provenance: exactRecord.provenance,
         isQuarantined: exactRecord.poisoningFlag !== null,
         verificationSummary,
+        explanation,
       });
     }
 
-    // 5. Conservative fuzzy fallback
+    // 5. Conservative fuzzy fallback — use diagnostic signals for high-signal FTS5 query
     if (matches.length < input.limit) {
-      const candidates = this.sqlite.findCandidates(
+      const signals = extractDiagnosticSignals(normalizedOutput);
+      const candidateResult = this.sqlite.findCandidates(
         this.repositoryId,
         commandFamily,
         normalizedOutput,
         50,
         input.includeQuarantined,
+        signals,
       );
 
       const fuzzyCandidates: FindFixMatch[] = [];
 
-      for (const candidate of candidates) {
+      for (const candidate of candidateResult.records) {
         if (seenIds.has(candidate.id)) continue;
 
+        const tokenJaccard = calculateTokenJaccard(normalizedOutput, candidate.normalizedOutput);
+        const trigram = calculateTrigramSimilarity(normalizedOutput, candidate.normalizedOutput);
         const similarity = calculateSimilarity(normalizedOutput, candidate.normalizedOutput);
 
         if (similarity >= input.threshold) {
@@ -518,6 +535,22 @@ export class MemoryService {
             candidateSummary,
           );
           const envelope = this.buildSanitizationEnvelope(candidate, trustScore);
+          const explanation: RetrievalExplanation = {
+            candidateSource: candidateResult.candidateSource,
+            diagnosticSignals: {
+              errorCodes: signals.errorCodes,
+              exceptionNames: signals.exceptionNames,
+              filePaths: signals.filePaths,
+              packageVersions: signals.packageVersions,
+              technicalTokens: signals.technicalTokens,
+            },
+            tokenJaccardScore: tokenJaccard,
+            trigramScore: trigram,
+            repositoryFilter: this.repositoryId,
+            commandFamilyFilter: commandFamily,
+            stalenessEffect: staleness.isStale ? staleness.staleReasons.join('; ') : null,
+            acceptanceReason: `Fuzzy match: similarity ${similarity.toFixed(3)} ≥ threshold ${input.threshold.toFixed(3)}`,
+          };
 
           fuzzyCandidates.push({
             id: candidate.id,
@@ -537,6 +570,7 @@ export class MemoryService {
             provenance: candidate.provenance,
             isQuarantined: candidate.poisoningFlag !== null,
             verificationSummary: candidateSummary,
+            explanation,
           });
         }
       }

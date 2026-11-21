@@ -19,6 +19,8 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import type { MemoryRecord } from '../types.js';
 import { extractCommandFamily } from '../core/match.js';
+import { buildFts5Query } from '../core/diagnostics.js';
+import type { DiagnosticSignals } from '../core/diagnostics.js';
 
 /** Bump this when the schema changes incompatibly; triggers a forced rebuild. */
 const INDEX_SCHEMA_VERSION = 2;
@@ -387,6 +389,10 @@ export class SqliteIndex {
 
   /**
    * Fast candidates search using FTS5 BM25 or candidate fetch filtered by repo and command family.
+   *
+   * Phase 3 — F-02 FIX: accepts pre-built DiagnosticSignals so the caller (memoryService)
+   * can extract high-signal tokens from the whole log before querying. The old plain
+   * searchQuery string is kept as a fallback for backward compatibility.
    */
   findCandidates(
     repositoryId: string,
@@ -394,42 +400,39 @@ export class SqliteIndex {
     searchQuery?: string,
     limit = 20,
     includeQuarantined = false,
-  ): MemoryRecord[] {
-    // If search query is provided and contains alphanumeric words, leverage FTS5
-    if (searchQuery) {
-      const cleanTokens = searchQuery
-        .replace(/[^a-zA-Z0-9_\s]/g, ' ')
-        .trim()
-        .split(/\s+/)
-        .filter((t) => t.length > 2)
-        .slice(0, 10);
+    diagnosticSignals?: DiagnosticSignals,
+  ): { records: MemoryRecord[]; candidateSource: 'fts5_bm25' | 'relational_scan' } {
+    // F-02 FIX: prefer pre-built DiagnosticSignals FTS query; fall back to legacy searchQuery
+    const ftsQuery = diagnosticSignals
+      ? buildFts5Query(diagnosticSignals)
+      : buildLegacyFtsQuery(searchQuery);
 
-      if (cleanTokens.length > 0) {
-        try {
-          const ftsMatch = cleanTokens.map((t) => `"${t}"`).join(' OR ');
-          let ftsSql = `
-            SELECT r.data
-            FROM records_fts f
-            JOIN records r ON f.id = r.id
-            WHERE records_fts MATCH ?
-              AND r.repository_id = ?
-              AND r.command_family = ?
-          `;
-          if (!includeQuarantined) {
-            ftsSql += ' AND r.is_quarantined = 0';
-          }
-          ftsSql += ' ORDER BY bm25(records_fts) LIMIT ?';
-
-          const stmt = this.db.prepare(ftsSql);
-          const rows = stmt.all(ftsMatch, repositoryId, commandFamily, limit) as {
-            data: string;
-          }[];
-          if (rows.length > 0) {
-            return rows.map((row) => JSON.parse(row.data) as MemoryRecord);
-          }
-        } catch {
-          // If FTS query fails or produces syntax issue, fall through to relational candidate scan
+    if (ftsQuery) {
+      try {
+        let ftsSql = `
+          SELECT r.data
+          FROM records_fts f
+          JOIN records r ON f.id = r.id
+          WHERE records_fts MATCH ?
+            AND r.repository_id = ?
+            AND r.command_family = ?
+        `;
+        if (!includeQuarantined) {
+          ftsSql += ' AND r.is_quarantined = 0';
         }
+        ftsSql += ' ORDER BY bm25(records_fts) LIMIT ?';
+
+        const rows = this.db.prepare(ftsSql).all(ftsQuery, repositoryId, commandFamily, limit) as {
+          data: string;
+        }[];
+        if (rows.length > 0) {
+          return {
+            records: rows.map((row) => JSON.parse(row.data) as MemoryRecord),
+            candidateSource: 'fts5_bm25',
+          };
+        }
+      } catch {
+        // FTS query failed — fall through to relational scan
       }
     }
 
@@ -440,9 +443,11 @@ export class SqliteIndex {
     }
     sql += ' ORDER BY created_at DESC LIMIT ?';
 
-    const stmt = this.db.prepare(sql);
-    const rows = stmt.all(repositoryId, commandFamily, limit) as { data: string }[];
-    return rows.map((row) => JSON.parse(row.data) as MemoryRecord);
+    const rows = this.db.prepare(sql).all(repositoryId, commandFamily, limit) as { data: string }[];
+    return {
+      records: rows.map((row) => JSON.parse(row.data) as MemoryRecord),
+      candidateSource: 'relational_scan',
+    };
   }
 
   getStats(repositoryId?: string): {
@@ -494,4 +499,17 @@ export class SqliteIndex {
   close(): void {
     this.db.close();
   }
+}
+
+/** Legacy FTS5 query builder from raw searchQuery string (first-10-token strategy). */
+function buildLegacyFtsQuery(searchQuery?: string): string | null {
+  if (!searchQuery) return null;
+  const tokens = searchQuery
+    .replace(/[^a-zA-Z0-9_\s]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t.length > 2)
+    .slice(0, 10);
+  if (tokens.length === 0) return null;
+  return tokens.map((t) => `"${t}"`).join(' OR ');
 }

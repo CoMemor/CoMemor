@@ -158,8 +158,8 @@ describe('C-02 / X-01 — indexRecord atomicity via SAVEPOINT', () => {
     const found = idx.findById('atomic-rec');
     expect(found?.id).toBe('atomic-rec');
 
-    // FTS5 — verify via findCandidates
-    const candidates = idx.findCandidates('test-repo', 'npm', 'hello');
+    // FTS5 — verify via findCandidates (Phase 3: returns { records, candidateSource })
+    const { records: candidates } = idx.findCandidates('test-repo', 'npm', 'hello');
     expect(candidates.some((c) => c.id === 'atomic-rec')).toBe(true);
   });
 

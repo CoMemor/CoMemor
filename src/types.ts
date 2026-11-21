@@ -134,6 +134,34 @@ export interface FindFixInput {
   includeQuarantined?: boolean;
 }
 
+/**
+ * Retrieval explainability metadata attached to each FindFixMatch.
+ * Phase 3 — provides transparency into scoring path without exposing raw indexed corpora.
+ */
+export interface RetrievalExplanation {
+  /** How the candidate was selected: 'exact_fingerprint' | 'fts5_bm25' | 'relational_scan' */
+  candidateSource: 'exact_fingerprint' | 'fts5_bm25' | 'relational_scan';
+  /** High-signal tokens extracted from the query (error codes, exception names, identifiers) */
+  diagnosticSignals: {
+    errorCodes: string[];
+    exceptionNames: string[];
+    filePaths: string[];
+    packageVersions: string[];
+    technicalTokens: string[];
+  };
+  /** Token Jaccard component of the similarity score */
+  tokenJaccardScore: number;
+  /** Trigram component of the similarity score */
+  trigramScore: number;
+  /** Repository and command-family filters applied */
+  repositoryFilter: string;
+  commandFamilyFilter: string;
+  /** Staleness / quarantine effects on this match */
+  stalenessEffect: string | null;
+  /** One-line acceptance or rejection reason */
+  acceptanceReason: string;
+}
+
 /** Individual match returned by find_fix */
 export interface FindFixMatch {
   id: string;
@@ -154,6 +182,8 @@ export interface FindFixMatch {
   isQuarantined: boolean;
   /** Derived verification summary from event store. Null if no events recorded yet. */
   verificationSummary?: VerificationSummary | null;
+  /** Retrieval explainability: scoring path and diagnostic signals. */
+  explanation?: RetrievalExplanation;
 }
 
 /** Output for find_fix tool */
