@@ -251,10 +251,11 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#capabilities">Capabilities</a>
         <a href="#tools">MCP Tools</a>
-        <a href="guides/ide-setup.html">IDE Setup</a>
-        <a href="architecture.html">Architecture</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
+        <a href="guides/ide-setup.html">IDE Setup</a>
+        <a href="architecture.html">Architecture</a>
+
       </nav>
       <div class="nav-r">
         <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
@@ -273,10 +274,11 @@
   <div class="mobile-menu" id="mmenu">
     <a class="ml" href="#capabilities">Capabilities</a>
     <a class="ml" href="#tools">MCP Tools</a>
-    <a class="ml" href="guides/ide-setup.html">IDE Setup Guide</a>
-    <a class="ml" href="architecture.html">Architecture Deep Dive</a>
     <a class="ml" href="#pricing">Pricing</a>
     <a class="ml" href="#faq">FAQ</a>
+    <a class="ml" href="guides/ide-setup.html">IDE Setup Guide</a>
+    <a class="ml" href="architecture.html">Architecture Deep Dive</a>
+
     <a class="btn btn-dark btn-lg" href="#install" style="align-self:flex-start">Get started</a>
   </div>
 
@@ -787,7 +789,8 @@
                   your host's MCP configuration (such as <code>~/.cursor/mcp.json</code>,
                   <code>claude_desktop_config.json</code>, or <code>.vscode/mcp.json</code>). When your AI coding
                   assistant encounters a build, test, or runtime error, it calls <code>find_fix</code> to look up prior
-                  fixes and <code>record_failure</code> once the issue is resolved.</p>
+                  fixes and <code>record_failure</code> once the issue is resolved.
+                </p>
               </div>
             </div>
           </div>
@@ -822,7 +825,8 @@
                 <p>Never. CoMemor enforces a strict non-executing MCP contract. The <code>verify_fix</code> tool
                   validates dry-run command safety and policy constraints, returning structured suggestions with
                   <code>executedByServer: false</code>. The host environment and human engineer always retain full
-                  execution control.</p>
+                  execution control.
+                </p>
               </div>
             </div>
           </div>
@@ -834,7 +838,8 @@
                 <p>CoMemor exposes four core MCP tools: <code>find_fix</code> (retrieves relevant verified solutions),
                   <code>record_failure</code> (persists a validated error-fix pair), <code>verify_fix</code> (checks
                   proposed fix safety against policy), and <code>list_memory_stats</code> (reports repository memory
-                  health and counts).</p>
+                  health and counts).
+                </p>
               </div>
             </div>
           </div>
@@ -845,7 +850,8 @@
               <div>
                 <p>Seven heuristic detectors scan records. Flagged ones are quarantined in
                   <code>.agent-memory/quarantine.jsonl</code>, and all retrieved records are returned wrapped in strict
-                  untrusted-data delimiters to prevent instruction hijacking.</p>
+                  untrusted-data delimiters to prevent instruction hijacking.
+                </p>
               </div>
             </div>
           </div>
