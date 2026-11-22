@@ -133,10 +133,11 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="../#capabilities">Capabilities</a>
         <a href="../#tools">MCP Tools</a>
-        <a href="ide-setup.html" style="color:var(--ink);font-weight:600">IDE Setup</a>
-        <a href="../architecture.html">Architecture</a>
         <a href="../#pricing">Pricing</a>
         <a href="../#faq">FAQ</a>
+        <a href="ide-setup.html" style="color:var(--ink);font-weight:600">IDE Setup</a>
+        <a href="../architecture.html">Architecture</a>
+
       </nav>
       <div class="nav-r">
         <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
@@ -533,7 +534,7 @@ Rules:
           const el = document.getElementById('gh-stars');
           if (el) el.textContent = d.stargazers_count >= 1000 ? (d.stargazers_count / 1000).toFixed(1) + 'k' : d.stargazers_count;
         }
-      }).catch(() => {});
+      }).catch(() => { });
   </script>
 </body>
 
