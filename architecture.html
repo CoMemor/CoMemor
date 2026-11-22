@@ -127,10 +127,11 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="./#capabilities">Capabilities</a>
         <a href="./#tools">MCP Tools</a>
-        <a href="guides/ide-setup.html">IDE Setup</a>
-        <a href="architecture.html" style="color:var(--ink);font-weight:600">Architecture</a>
         <a href="./#pricing">Pricing</a>
         <a href="./#faq">FAQ</a>
+        <a href="guides/ide-setup.html">IDE Setup</a>
+        <a href="architecture.html" style="color:var(--ink);font-weight:600">Architecture</a>
+
       </nav>
       <div class="nav-r">
         <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
@@ -150,10 +151,10 @@
   <div class="mobile-menu" id="mmenu">
     <a class="ml" href="./#capabilities">Capabilities</a>
     <a class="ml" href="./#tools">MCP Tools</a>
-    <a class="ml" href="guides/ide-setup.html">IDE Setup Guide</a>
-    <a class="ml" href="architecture.html">Architecture Deep Dive</a>
     <a class="ml" href="./#pricing">Pricing</a>
     <a class="ml" href="./#faq">FAQ</a>
+    <a class="ml" href="guides/ide-setup.html">IDE Setup Guide</a>
+    <a class="ml" href="architecture.html">Architecture Deep Dive</a>
     <a class="btn btn-dark btn-lg" href="./#install" style="align-self:flex-start">Get started</a>
   </div>
 
@@ -182,7 +183,8 @@
             <p><strong>Local-First Guarantee:</strong> CoMemor communicates exclusively over JSON-RPC via standard
               input/output (stdio) with your host IDE. All data stays inside your repository's
               <code>.agent-memory/</code> directory. There are zero cloud databases, zero telemetry endpoints, and zero
-              external network calls.</p>
+              external network calls.
+            </p>
           </div>
 
           <!-- PHILOSOPHY -->
@@ -239,7 +241,8 @@
           <p>CoMemor leverages the native <code>node:sqlite</code> module built into Node.js (≥ 22.5.0), eliminating
             native binary compile steps. On startup, CoMemor verifies the SQLite index against
             <code>records.jsonl</code> line offsets and seamlessly rebuilds the full-text search index if missing or out
-            of sync.</p>
+            of sync.
+          </p>
 
           <!-- SECURITY MODEL -->
           <h2 id="security">3. Multi-Layer Security &amp; Redaction Pipeline</h2>
@@ -268,7 +271,8 @@
             instructions embedded in mock test failures), CoMemor runs <strong>7 heuristic detectors</strong> looking
             for instruction override markers (such as <code>Ignore previous instructions</code> or
             <code>System prompt override</code>). Flagged records are quarantined in
-            <code>.agent-memory/quarantine.jsonl</code> and excluded from active retrieval.</p>
+            <code>.agent-memory/quarantine.jsonl</code> and excluded from active retrieval.
+          </p>
 
           <h3>Layer 4: Untrusted-Data Envelopes</h3>
           <p>When <code>find_fix</code> returns candidate fixes to the host LLM, all retrieved historical content is
@@ -282,7 +286,8 @@
             <p><strong>Safety Invariant:</strong> The <code>verify_fix</code> tool returns
               <code>executedByServer: false</code> and <code>requiresHostConfirmation: true</code> under all
               circumstances. CoMemor evaluates policy safety but delegates 100% of execution decisions to the human
-              developer or the host IDE's confirmation dialog.</p>
+              developer or the host IDE's confirmation dialog.
+            </p>
           </div>
 
           <p>When an agent requests command verification, CoMemor evaluates:</p>
@@ -298,7 +303,8 @@
               <tr>
                 <td><strong>Binary Allowlist</strong></td>
                 <td>Command must invoke an approved development binary (e.g., <code>npm</code>, <code>npx</code>,
-                  <code>git</code>, <code>cargo</code>, <code>pytest</code>).</td>
+                  <code>git</code>, <code>cargo</code>, <code>pytest</code>).
+                </td>
                 <td>Returns policy warning; flags command for operator review.</td>
               </tr>
               <tr>
@@ -423,7 +429,7 @@
           const el = document.getElementById('gh-stars');
           if (el) el.textContent = d.stargazers_count >= 1000 ? (d.stargazers_count / 1000).toFixed(1) + 'k' : d.stargazers_count;
         }
-      }).catch(() => {});
+      }).catch(() => { });
   </script>
 </body>
 
