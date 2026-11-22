@@ -40,6 +40,7 @@
     html {
       scroll-behavior: smooth;
       -webkit-text-size-adjust: 100%;
+      max-width: 100%;
       overflow-x: hidden
     }
 
@@ -50,7 +51,9 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
-      overflow-x: hidden
+      max-width: 100%;
+      overflow-x: hidden;
+      position: relative
     }
 
     h1,
@@ -2500,25 +2503,34 @@
       .voices-grid,
       .faq-grid,
       .install {
-        grid-template-columns: minmax(0, 1fr)
+        grid-template-columns: minmax(0, 1fr) !important
       }
 
+      .wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important
+      }
+
+      section,
+      .card,
+      .term-stage,
+      .insp,
+      .stage,
+      .pane,
+      .win,
+      .install,
+      .code-card,
+      .q-card,
       .caps-grid > *,
       .tools-grid > *,
       .voices-grid > *,
       .install > *,
       .install > div:first-child,
-      .cfg,
-      .insp,
-      .insp-body,
-      .people,
-      .stage,
-      .pane,
-      .win,
-      .code-card,
-      .q-card {
-        min-width: 0;
-        max-width: 100%
+      .cfg {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important
       }
 
       .faq-grid .head {
@@ -2542,11 +2554,16 @@
       }
 
       .ts-cols {
-        grid-template-columns: 1fr
+        grid-template-columns: 1fr !important;
+        width: 100% !important
       }
 
       .ts-col {
-        min-height: 0
+        min-height: 0;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important
       }
 
       .ts-col+.ts-col {
@@ -2554,22 +2571,59 @@
         border-top: 1px solid var(--term-line)
       }
 
+      .ts-lines .ln {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important
+      }
+
+      .ts-stat {
+        flex-wrap: wrap;
+        gap: 8px
+      }
+
       .people {
-        flex-direction: row;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 10px !important
       }
 
       .person {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
         flex: 0 0 auto
       }
 
-      .insp-body,
-      .insp-body pre,
-      .code-card {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch
+      .insp-body {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 20px 16px !important
+      }
+
+      .insp-body pre {
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+        font-size: 12px !important
+      }
+
+      .code-card,
+      #rCode {
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+        padding: 20px 16px !important
       }
 
       .qgrid {
@@ -2592,12 +2646,16 @@
       }
 
       .metrics {
-        grid-template-columns: 1fr;
-        gap: 40px
+        grid-template-columns: 1fr !important;
+        gap: 36px !important
+      }
+
+      .metric b {
+        font-size: clamp(2.4rem, 8vw, 3.8rem) !important
       }
 
       .kpis {
-        grid-template-columns: repeat(2, 1fr)
+        grid-template-columns: repeat(2, 1fr) !important
       }
 
       .kpi:nth-child(3) {
@@ -2609,11 +2667,19 @@
       }
 
       .rows .r {
-        grid-template-columns: minmax(0, 1fr) auto
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 8px !important
       }
 
       .rows .r>code {
-        display: none
+        display: none !important
+      }
+
+      .rows .r .tx {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important
       }
 
       .hero {
@@ -2622,8 +2688,8 @@
       }
 
       .hero .wrap {
-        width: 100%;
-        padding: 0 20px
+        width: 100% !important;
+        padding: 0 20px !important
       }
 
       .hero h1 {
@@ -2641,27 +2707,39 @@
       }
 
       .cmd-card {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
         margin-top: 32px;
-        padding: 22px 18px
+        padding: 22px 18px !important
       }
 
       .hosts {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
         margin-top: 36px
       }
 
       .hosts ul {
-        justify-content: center;
-        gap: 8px
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        max-width: 100% !important
       }
 
       .install {
-        padding: 28px 18px;
+        padding: clamp(24px, 5vw, 36px) clamp(16px, 4vw, 24px) !important;
         border-radius: var(--r-md);
-        gap: 28px
+        gap: 24px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important
+      }
+
+      .install > div:first-child {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important
       }
 
       .install h2 {
@@ -2674,26 +2752,38 @@
         margin-top: 10px
       }
 
-      .install .seg {
-        max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+      .install .seg,
+      #ideSeg {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 14px !important;
         margin-top: 22px;
-        gap: 4px
+        gap: 6px !important;
+        padding: 6px !important;
+        box-sizing: border-box !important
       }
 
-      .install .seg button {
-        font-size: 12px;
-        padding: 6px 12px
+      .install .seg button,
+      #ideSeg button {
+        flex: 1 1 auto !important;
+        text-align: center !important;
+        font-size: 12px !important;
+        padding: 8px 12px !important;
+        white-space: nowrap !important
       }
 
       .install .btns {
+        display: flex !important;
+        flex-wrap: wrap !important;
         margin-top: 22px;
-        gap: 10px
+        gap: 10px;
+        width: 100% !important
       }
 
       .install .btns .btn {
-        flex: 1 1 auto;
+        flex: 1 1 auto !important;
         justify-content: center;
         text-align: center;
         font-size: 13.5px;
@@ -2701,7 +2791,11 @@
       }
 
       .cfg {
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
         border-radius: 16px
       }
 
@@ -2715,13 +2809,19 @@
         font-size: 12px
       }
 
-      .cfg pre {
-        padding: 18px 16px;
-        font-size: 12.5px;
+      .cfg pre,
+      #cfgCode {
+        padding: 16px 14px !important;
+        font-size: 12px !important;
         line-height: 1.7;
-        max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        box-sizing: border-box !important
       }
 
       .score {
@@ -2740,6 +2840,12 @@
 
       .acc-a p {
         padding-right: 0
+      }
+
+      #mark {
+        font-size: clamp(3rem, 15vw, 9rem) !important;
+        overflow: hidden !important;
+        max-width: 100% !important
       }
     }
 
