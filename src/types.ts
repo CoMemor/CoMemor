@@ -19,9 +19,14 @@ export type MatchType = 'exact' | 'fuzzy' | 'none';
 
 /** Lockfile and runtime fingerprints captured at record time. */
 export interface Environment {
+  /** Schema version for this Environment block. */
+  envSchemaVersion?: 1;
   os: string;
+  arch?: string;
   node: string;
   packageManager: string;
+  /** Source that produced packageManager: 'command' | 'package_json_field' | 'lockfile' | 'unknown' */
+  packageManagerSource?: string;
   /** Map from lockfile path (relative to workspace) to SHA-256 hex. */
   lockfileHashes: Record<string, string>;
 }

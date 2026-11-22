@@ -35,7 +35,7 @@ import { redactSensitiveData } from './redact.js';
 import { normalizeOutput, CURRENT_NORMALIZER_VERSION } from './normalize.js';
 import { generateFingerprint } from './fingerprint.js';
 import { extractCommandFamily, calculateSimilarity, calculateTokenJaccard, calculateTrigramSimilarity, computeRecordAge } from './match.js';
-import { getLockfileHashes, checkRecordStaleness } from './staleness.js';
+import { checkRecordStaleness } from './staleness.js';
 import { detectPoisoningInRecord } from './poisonDetector.js';
 import { CommandPolicyEngine } from '../policy/commandPolicy.js';
 import { createMemoryLogger, type MemoryLogger } from './logger.js';
@@ -43,6 +43,7 @@ import { JsonlStorage } from '../storage/jsonl.js';
 import { SqliteIndex } from '../storage/index.js';
 import { VerificationEventStore, computeSummary } from '../storage/verificationEvents.js';
 import { extractDiagnosticSignals } from './diagnostics.js';
+import { buildEnvironmentSnapshot } from './environment.js';
 import type { RetrievalExplanation } from '../types.js';
 import type { VerifyFixInput, VerifyFixOutput } from '../types.js';
 import { VerifyFixZodSchema } from '../schemas/validation.js';
@@ -348,12 +349,7 @@ export class MemoryService {
         explanation: redactedExplanation,
         risk: input.risk,
       },
-      environment: {
-        os: process.platform,
-        node: process.version,
-        packageManager: 'npm',
-        lockfileHashes: getLockfileHashes(this.workspaceRoot),
-      },
+      environment: buildEnvironmentSnapshot(redactedCommand, this.workspaceRoot),
       verification: {
         status: 'unknown',
         verifiedAt: null,
