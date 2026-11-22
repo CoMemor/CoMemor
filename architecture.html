@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoMemor Architecture — Local-First Agent Memory, SQLite FTS5 &amp; Security Model</title>
+  <meta name="description"
+    content="Technical deep dive into CoMemor: append-only JSONL, SQLite FTS5 lexical matching, SHA-256 fingerprinting, dual-layer secret redaction, and prompt-injection quarantine.">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <!-- CANONICAL: When deploying with custom domain on Cloudflare Pages, change to https://YOUR_DOMAIN/architecture.html -->
+  <link rel="canonical" href="https://prasannasais.github.io/CoMemor/architecture.html">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="CoMemor">
+  <meta property="og:title" content="CoMemor Architecture — Local-First Agent Memory, SQLite FTS5 &amp; Security Model">
+  <meta property="og:description"
+    content="Technical deep dive into CoMemor: append-only JSONL, SQLite FTS5 lexical matching, SHA-256 fingerprinting, dual-layer secret redaction, and prompt-injection quarantine.">
+  <meta property="og:url" content="https://prasannasais.github.io/CoMemor/architecture.html">
+  <meta property="og:image" content="https://prasannasais.github.io/CoMemor/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="CoMemor Architecture — Local-First Memory Subsystem and Security Model">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CoMemor Architecture — Local-First Agent Memory, SQLite FTS5 &amp; Security Model">
+  <meta name="twitter:description"
+    content="Technical deep dive into CoMemor: append-only JSONL, SQLite FTS5 lexical matching, SHA-256 fingerprinting, dual-layer secret redaction, and prompt-injection quarantine.">
+  <meta name="twitter:image" content="https://prasannasais.github.io/CoMemor/assets/og-image.png">
+  <meta name="twitter:image:alt" content="CoMemor Architecture Technical Overview">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="assets/comemor-logo.png">
+  <link rel="apple-touch-icon" href="assets/comemor-logo.png">
+
+  <!-- Fonts & Stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "CoMemor Technical Architecture: Local-First Agent Memory, SQLite FTS5, and Security Boundaries",
+    "description": "Technical specification and threat model for CoMemor's append-only JSONL storage, deterministic error fingerprinting, heuristic secret redaction, and non-executing MCP contract.",
+    "url": "https://prasannasais.github.io/CoMemor/architecture.html",
+    "datePublished": "2026-11-14",
+    "dateModified": "2026-11-22",
+    "author": {
+      "@type": "Organization",
+      "name": "CoMemor",
+      "url": "https://prasannasais.github.io/CoMemor/"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CoMemor",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://prasannasais.github.io/CoMemor/assets/comemor-logo.png"
+      }
+    },
+    "mainEntityOfPage": "https://prasannasais.github.io/CoMemor/architecture.html"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://prasannasais.github.io/CoMemor/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Architecture",
+        "item": "https://prasannasais.github.io/CoMemor/architecture.html"
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap">
+      <a class="brand" href="./" aria-label="CoMemor home">
+        <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32" loading="eager"></span>
+        CoMemor <span class="ver">v1.0.7</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="./#capabilities">Capabilities</a>
+        <a href="./#tools">MCP Tools</a>
+        <a href="./#how">How it works</a>
+        <a href="guides/ide-setup.html">IDE Setup</a>
+        <a href="architecture.html" style="color:var(--ink);font-weight:600">Architecture</a>
+        <a href="./#faq">FAQ</a>
+        <a href="./#pricing">Pricing</a>
+      </nav>
+      <div class="nav-r">
+        <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
+          <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg><span>Star</span>
+        </a>
+        <a class="btn btn-dark" href="./#install">Get started →</a>
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mmenu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mmenu">
+    <a class="ml" href="./">Home</a>
+    <a class="ml" href="./#capabilities">Capabilities</a>
+    <a class="ml" href="./#tools">MCP Tools</a>
+    <a class="ml" href="guides/ide-setup.html">IDE Setup</a>
+    <a class="ml" href="architecture.html">Architecture</a>
+    <a class="ml" href="./#faq">FAQ</a>
+    <a class="ml" href="./#pricing">Pricing</a>
+    <a class="btn btn-dark btn-lg" href="./#install" style="align-self:flex-start">Get started</a>
+  </div>
+
+  <main id="main">
+    <!-- PAGE HERO -->
+    <section class="doc-hero">
+      <div class="wrap">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="./">Home</a>
+          <span class="sep">/</span>
+          <span aria-current="page">Architecture Deep Dive</span>
+        </nav>
+        <span class="eyebrow" style="margin-top:12px;display:inline-block"><i style="background:var(--blue)"></i>Technical Specification</span>
+        <h1>CoMemor Architecture &amp; Security Model</h1>
+        <p class="lead">A comprehensive look at how CoMemor implements local-first persistence, deterministic and fuzzy lexical retrieval in under 50ms, multi-layer secret redaction, and strict non-executing safety policies.</p>
+      </div>
+    </section>
+
+    <!-- CONTENT BODY -->
+    <section class="doc-body">
+      <div class="wrap doc-grid">
+        <article class="prose">
+          <div class="callout">
+            <p><strong>Local-First Guarantee:</strong> CoMemor communicates exclusively over JSON-RPC via standard input/output (stdio) with your host IDE. All data stays inside your repository's <code>.agent-memory/</code> directory. There are zero cloud databases, zero telemetry endpoints, and zero external network calls.</p>
+          </div>
+
+          <!-- PHILOSOPHY -->
+          <h2 id="philosophy">1. Design Philosophy: Deterministic vs. Semantic Retrieval</h2>
+          <p>Many agent memory systems rely on vector databases and text embeddings. In software engineering error diagnostics, vector embeddings introduce subtle but critical failure modes:</p>
+          <ul>
+            <li><strong>Embedding Drift:</strong> Embeddings fluctuate across model versions and vendor APIs, causing previously matched errors to suddenly miss.</li>
+            <li><strong>Syntactic Blindness:</strong> A subtle difference in a flag, path alias, or compiler error code (e.g., <code>TS2307</code> vs <code>TS2304</code>) often has near-identical semantic cosine similarity, leading to inappropriate fix recommendations.</li>
+            <li><strong>Latency &amp; Cost:</strong> Generating vector embeddings for every command output burns API tokens and introduces 300–800ms of network overhead before every agent retry.</li>
+          </ul>
+          <p><strong>CoMemor takes a deterministic approach:</strong></p>
+          <div class="arch-card-grid">
+            <div class="arch-card">
+              <h4><span>⚡</span> Tier 1: Exact SHA-256 Match</h4>
+              <p>Normalizes command strings, exit codes, and sanitized error traces into a deterministic SHA-256 fingerprint. Exact recurring failures resolve in <strong>&lt;5ms</strong> with 1.0 confidence.</p>
+            </div>
+            <div class="arch-card">
+              <h4><span>🔍</span> Tier 2: SQLite FTS5 Lexical Match</h4>
+              <p>For modified error traces, token-overlap BM25 matching ranks candidate fixes against the built-in SQLite index, scored with Wilson confidence intervals.</p>
+            </div>
+          </div>
+
+          <!-- STORAGE ENGINE -->
+          <h2 id="storage">2. Storage Subsystem &amp; Repository Layout</h2>
+          <p>CoMemor stores all records in a dedicated <code>.agent-memory/</code> folder inside the project workspace:</p>
+          <pre><code>.agent-memory/
+  records.jsonl           — Append-only fix records (safe to commit to Git after review)
+  index.db                — SQLite FTS5 index (gitignored, rebuilt automatically on startup)
+  logs.jsonl              — Operational logs written via Pino (gitignored)
+  approvals-pending.jsonl — Fix commands validated by verify_fix (gitignored)
+  approvals-resolved.jsonl — Operator decision audit log (gitignored)</code></pre>
+
+          <h3>Append-Only JSONL as Source of Truth</h3>
+          <p>The human-readable <code>records.jsonl</code> file acts as the durable, git-friendly source of truth. Every verified failure resolution is appended as a single JSON line containing:</p>
+          <ul>
+            <li>Original command and non-zero exit code</li>
+            <li>SHA-256 normalized error fingerprint</li>
+            <li>Redacted failure stdout/stderr excerpt</li>
+            <li>Verified fix command array and natural language explanation</li>
+            <li>Lockfile hash and normalizer version for staleness detection</li>
+            <li>Wilson score statistical confidence tracking (success count, trial count)</li>
+          </ul>
+
+          <h3>Automatic SQLite FTS5 Indexing</h3>
+          <p>CoMemor leverages the native <code>node:sqlite</code> module built into Node.js (≥ 22.5.0), eliminating native binary compile steps. On startup, CoMemor verifies the SQLite index against <code>records.jsonl</code> line offsets and seamlessly rebuilds the full-text search index if missing or out of sync.</p>
+
+          <!-- SECURITY MODEL -->
+          <h2 id="security">3. Multi-Layer Security &amp; Redaction Pipeline</h2>
+          <p>Persisting terminal output presents real security challenges. Failure logs frequently contain environment variables, authorization headers, database connection strings, or personal access tokens. CoMemor addresses this with a defense-in-depth pipeline:</p>
+
+          <h3>Layer 1: Deterministic Pattern Redaction</h3>
+          <p>Before any record is written to disk or indexed in SQLite, CoMemor executes deterministic regex replacement across all fields to scrub:</p>
+          <ul>
+            <li>Bearer tokens and Authorization headers</li>
+            <li>GitHub, GitLab, and NPM personal access tokens (<code>ghp_*</code>, <code>npm_*</code>)</li>
+            <li>AWS, GCP, and Azure secret keys and credentials</li>
+            <li>Database connection URLs with embedded passwords (e.g. <code>postgres://user:pass@host/db</code>)</li>
+            <li>Private keys (RSA, SSH, PGP)</li>
+          </ul>
+
+          <h3>Layer 2: Shannon Entropy Analysis</h3>
+          <p>Pattern matching alone fails against novel API key formats. CoMemor supplements regex with rolling Shannon entropy calculation. String tokens exceeding high-entropy thresholds (characteristic of random cryptographic secrets) are automatically sanitized and replaced with redaction placeholders before disk write.</p>
+
+          <h3>Layer 3: Heuristic Prompt-Injection Detection</h3>
+          <p>To prevent malicious repository actors from poisoning stored memories with prompt injections (e.g., hidden instructions embedded in mock test failures), CoMemor runs <strong>7 heuristic detectors</strong> looking for instruction override markers (such as <code>Ignore previous instructions</code> or <code>System prompt override</code>). Flagged records are quarantined in <code>.agent-memory/quarantine.jsonl</code> and excluded from active retrieval.</p>
+
+          <h3>Layer 4: Untrusted-Data Envelopes</h3>
+          <p>When <code>find_fix</code> returns candidate fixes to the host LLM, all retrieved historical content is wrapped in explicit untrusted-data delimiters. This instructs the consuming model to treat historical context strictly as data, neutralizing secondary injection attacks.</p>
+
+          <!-- POLICY ENGINE -->
+          <h2 id="policy">4. Non-Executing Policy Contract (verify_fix)</h2>
+          <p>A core architectural principle of CoMemor is that <strong>the server never executes commands</strong>.</p>
+          <div class="callout warning">
+            <p><strong>Safety Invariant:</strong> The <code>verify_fix</code> tool returns <code>executedByServer: false</code> and <code>requiresHostConfirmation: true</code> under all circumstances. CoMemor evaluates policy safety but delegates 100% of execution decisions to the human developer or the host IDE's confirmation dialog.</p>
+          </div>
+
+          <p>When an agent requests command verification, CoMemor evaluates:</p>
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Safety Check</th>
+                <th>Validation Rule</th>
+                <th>Behavior on Violation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Binary Allowlist</strong></td>
+                <td>Command must invoke an approved development binary (e.g., <code>npm</code>, <code>npx</code>, <code>git</code>, <code>cargo</code>, <code>pytest</code>).</td>
+                <td>Returns policy warning; flags command for operator review.</td>
+              </tr>
+              <tr>
+                <td><strong>Shell Metacharacters</strong></td>
+                <td>Blocks command chaining (<code>;</code>, <code>&amp;&amp;</code>, <code>||</code>), redirection (<code>&gt;</code>, <code>&lt;</code>), and shell escapes.</td>
+                <td>Rejects proposal as high-risk execution pattern.</td>
+              </tr>
+              <tr>
+                <td><strong>Path Containment</strong></td>
+                <td>Ensures target file arguments remain inside the repository workspace boundary.</td>
+                <td>Blocks paths escaping root (e.g., <code>../../etc/passwd</code>).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- DASHBOARD BRIDGE -->
+          <h2 id="bridge">5. Memory Console Architecture (dashboard-bridge)</h2>
+          <p>The CoMemor dashboard is designed as an isolated, read-only observability console:</p>
+          <ul>
+            <li><strong>Separate Process:</strong> Started via <code>npx comemor-dashboard</code>, the bridge runs as a standalone Fastify server on <code>127.0.0.1:4321</code>. It never shares memory, stdio, or process space with the MCP server.</li>
+            <li><strong>Read-Only Mode:</strong> Opens SQLite and JSONL files in read-only mode, guaranteeing that viewing or auditing records can never mutate stored memory.</li>
+            <li><strong>Live Streaming:</strong> Uses Server-Sent Events (SSE) at <code>/api/events</code> to stream agent tool calls to the browser in real time without polling.</li>
+          </ul>
+
+          <div style="margin-top:48px;padding-top:24px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px">
+            <a href="./" class="btn btn-line">← Back to Homepage</a>
+            <a href="guides/ide-setup.html" class="btn btn-dark">View IDE Setup Guides →</a>
+          </div>
+        </article>
+
+        <!-- TABLE OF CONTENTS (STICKY) -->
+        <aside class="doc-toc" aria-label="Table of Contents">
+          <h4>Architecture</h4>
+          <ul>
+            <li><a href="#philosophy">1. Design Philosophy</a></li>
+            <li><a href="#storage">2. Storage Subsystem</a></li>
+            <li><a href="#security">3. Security Pipeline</a></li>
+            <li><a href="#policy">4. Policy Contract</a></li>
+            <li><a href="#bridge">5. Memory Console</a></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <a class="brand" href="./">
+            <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32" loading="lazy"></span>
+            CoMemor
+          </a>
+          <p>Persistent engineering memory for AI coding agents.</p>
+        </div>
+        <div class="cols">
+          <div>
+            <h4>Product</h4>
+            <a href="./#capabilities">Capabilities</a>
+            <a href="./#tools">MCP Tools</a>
+            <a href="architecture.html">Architecture</a>
+            <a href="./#faq">FAQ</a>
+            <a href="./#pricing">Pricing</a>
+          </div>
+          <div>
+            <h4>Guides</h4>
+            <a href="guides/ide-setup.html#cursor">Cursor Setup</a>
+            <a href="guides/ide-setup.html#claude">Claude Desktop</a>
+            <a href="guides/ide-setup.html#vscode">VS Code</a>
+            <a href="guides/ide-setup.html#windsurf">Windsurf</a>
+            <a href="guides/ide-setup.html#antigravity">Antigravity</a>
+          </div>
+          <div>
+            <h4>Resources</h4>
+            <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm</a>
+            <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">MCP Spec</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0</a>
+          </div>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© 2026 CoMemor · Open source under GPL-3.0-only</span>
+        <span>Built in the open, for agents that remember.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const burger = document.getElementById('burger');
+    const mmenu = document.getElementById('mmenu');
+    if (burger && mmenu) {
+      burger.addEventListener('click', () => {
+        const open = document.body.classList.toggle('menu-open');
+        burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+  </script>
+</body>
+
+</html>
