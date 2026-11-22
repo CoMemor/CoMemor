@@ -11,7 +11,7 @@
   <meta name="color-scheme" content="light">
   <meta name="robots" content="index, follow">
 
-  
+
   <link rel="canonical" href="https://comemor.tech/">
 
   <!-- Open Graph / Facebook -->
@@ -244,7 +244,8 @@
   <header class="nav" id="nav">
     <div class="wrap">
       <a class="brand" href="#top" aria-label="CoMemor home">
-        <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32" fetchpriority="high"></span>
+        <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+            fetchpriority="high"></span>
         CoMemor <span class="ver">v1.0.7</span>
       </a>
       <nav class="nav-links" aria-label="Primary">
@@ -690,7 +691,8 @@
               <button role="tab" aria-selected="false" data-ide="windsurf">Windsurf</button>
             </div>
             <div class="btns">
-              <a class="btn btn-dark" href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">View on npm</a>
+              <a class="btn btn-dark" href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">View
+                on npm</a>
               <a class="btn btn-line" href="guides/ide-setup.html">Full Setup Guide</a>
             </div>
           </div>
@@ -772,62 +774,90 @@
       <div class="wrap faq-grid">
         <div class="head rv">
           <h2>Questions, answered straight.</h2>
-          <p style="margin-top:8px;color:var(--ink-2);font-size:15px">Everything you need to know about CoMemor's local memory architecture and security model.</p>
+          <p style="margin-top:8px;color:var(--ink-2);font-size:15px">Everything you need to know about CoMemor's local
+            memory architecture and security model.</p>
         </div>
         <div class="acc rv" id="acc" style="--d:1">
           <div class="acc-i open">
-            <button class="acc-q" aria-expanded="true">How does CoMemor work with Cursor, Claude Desktop, and VS Code?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="true">How does CoMemor work with Cursor, Claude Desktop, and VS
+              Code?<span class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>CoMemor runs as a standard Model Context Protocol (MCP) server. You add <code>npx comemor</code> to your host's MCP configuration (such as <code>~/.cursor/mcp.json</code>, <code>claude_desktop_config.json</code>, or <code>.vscode/mcp.json</code>). When your AI coding assistant encounters a build, test, or runtime error, it calls <code>find_fix</code> to look up prior fixes and <code>record_failure</code> once the issue is resolved.</p>
+                <p>CoMemor runs as a standard Model Context Protocol (MCP) server. You add <code>npx comemor</code> to
+                  your host's MCP configuration (such as <code>~/.cursor/mcp.json</code>,
+                  <code>claude_desktop_config.json</code>, or <code>.vscode/mcp.json</code>). When your AI coding
+                  assistant encounters a build, test, or runtime error, it calls <code>find_fix</code> to look up prior
+                  fixes and <code>record_failure</code> once the issue is resolved.</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">Does CoMemor send my code or secrets to the cloud?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">Does CoMemor send my code or secrets to the cloud?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>No. CoMemor is 100% local-first with zero external telemetry or cloud dependencies. All memories are stored directly in your project under <code>.agent-memory/records.jsonl</code>. Before storing, regex patterns and Shannon entropy scans automatically redact API keys, tokens, and credentials.</p>
+                <p>No. CoMemor is 100% local-first with zero external telemetry or cloud dependencies. All memories are
+                  stored directly in your project under <code>.agent-memory/records.jsonl</code>. Before storing, regex
+                  patterns and Shannon entropy scans automatically redact API keys, tokens, and credentials.</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">How is CoMemor different from vector-database agent memory?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">How is CoMemor different from vector-database agent memory?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>Vector databases rely on probabilistic semantic embeddings that can drift, hallucinate false associations, and introduce heavy Python or remote API dependencies. CoMemor uses deterministic SHA-256 error fingerprinting combined with SQLite FTS5 lexical token matching. It is deterministic, explainable, fast, and runs entirely in local Node.js.</p>
+                <p>Vector databases rely on probabilistic semantic embeddings that can drift, hallucinate false
+                  associations, and introduce heavy Python or remote API dependencies. CoMemor uses deterministic
+                  SHA-256 error fingerprinting combined with SQLite FTS5 lexical token matching. It is deterministic,
+                  explainable, fast, and runs entirely in local Node.js.</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">Does CoMemor execute shell commands automatically?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">Does CoMemor execute shell commands automatically?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>Never. CoMemor enforces a strict non-executing MCP contract. The <code>verify_fix</code> tool validates dry-run command safety and policy constraints, returning structured suggestions with <code>executedByServer: false</code>. The host environment and human engineer always retain full execution control.</p>
+                <p>Never. CoMemor enforces a strict non-executing MCP contract. The <code>verify_fix</code> tool
+                  validates dry-run command safety and policy constraints, returning structured suggestions with
+                  <code>executedByServer: false</code>. The host environment and human engineer always retain full
+                  execution control.</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">What MCP tools does CoMemor provide?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">What MCP tools does CoMemor provide?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>CoMemor exposes four core MCP tools: <code>find_fix</code> (retrieves relevant verified solutions), <code>record_failure</code> (persists a validated error-fix pair), <code>verify_fix</code> (checks proposed fix safety against policy), and <code>list_memory_stats</code> (reports repository memory health and counts).</p>
+                <p>CoMemor exposes four core MCP tools: <code>find_fix</code> (retrieves relevant verified solutions),
+                  <code>record_failure</code> (persists a validated error-fix pair), <code>verify_fix</code> (checks
+                  proposed fix safety against policy), and <code>list_memory_stats</code> (reports repository memory
+                  health and counts).</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">How is prompt injection handled?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">How is prompt injection handled?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>Seven heuristic detectors scan records. Flagged ones are quarantined in <code>.agent-memory/quarantine.jsonl</code>, and all retrieved records are returned wrapped in strict untrusted-data delimiters to prevent instruction hijacking.</p>
+                <p>Seven heuristic detectors scan records. Flagged ones are quarantined in
+                  <code>.agent-memory/quarantine.jsonl</code>, and all retrieved records are returned wrapped in strict
+                  untrusted-data delimiters to prevent instruction hijacking.</p>
               </div>
             </div>
           </div>
           <div class="acc-i">
-            <button class="acc-q" aria-expanded="false">Can I inspect and edit my agent's stored memories?<span class="pm"></span></button>
+            <button class="acc-q" aria-expanded="false">Can I inspect and edit my agent's stored memories?<span
+                class="pm"></span></button>
             <div class="acc-a">
               <div>
-                <p>Yes. Memories are stored in plain text JSONL at <code>.agent-memory/records.jsonl</code>. You can inspect, version control, or edit them with any text editor, or launch the built-in local web dashboard via <code>npx comemor-dashboard</code> to explore memory stats, search queries, and approval logs.</p>
+                <p>Yes. Memories are stored in plain text JSONL at <code>.agent-memory/records.jsonl</code>. You can
+                  inspect, version control, or edit them with any text editor, or launch the built-in local web
+                  dashboard via <code>npx comemor-dashboard</code> to explore memory stats, search queries, and approval
+                  logs.</p>
               </div>
             </div>
           </div>
@@ -888,7 +918,8 @@
             <h4>Guides &amp; Docs</h4>
             <a href="guides/ide-setup.html">IDE Setup Guide</a>
             <a href="architecture.html">Architecture Deep Dive</a>
-            <a href="https://github.com/PrasannaSaiS/CoMemor#readme" target="_blank" rel="noopener">README &amp; Threat Model</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor#readme" target="_blank" rel="noopener">README &amp; Threat
+              Model</a>
             <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
           </div>
           <div>
@@ -896,7 +927,8 @@
             <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub Repository</a>
             <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm Package</a>
             <a href="https://github.com/PrasannaSaiS/CoMemor/issues" target="_blank" rel="noopener">Issue Tracker</a>
-            <a href="https://github.com/PrasannaSaiS/CoMemor/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 License</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0
+              License</a>
           </div>
         </div>
       </div>

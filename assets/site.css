@@ -39,7 +39,8 @@
 
     html {
       scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden
     }
 
     body {
@@ -104,7 +105,8 @@
     .wrap {
       max-width: 1360px;
       margin: 0 auto;
-      padding: 0 var(--pad)
+      padding: 0 var(--pad);
+      width: 100%
     }
 
     .sec {
@@ -2498,7 +2500,25 @@
       .voices-grid,
       .faq-grid,
       .install {
-        grid-template-columns: 1fr
+        grid-template-columns: minmax(0, 1fr)
+      }
+
+      .caps-grid > *,
+      .tools-grid > *,
+      .voices-grid > *,
+      .install > *,
+      .install > div:first-child,
+      .cfg,
+      .insp,
+      .insp-body,
+      .people,
+      .stage,
+      .pane,
+      .win,
+      .code-card,
+      .q-card {
+        min-width: 0;
+        max-width: 100%
       }
 
       .faq-grid .head {
@@ -2537,11 +2557,19 @@
       .people {
         flex-direction: row;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         scrollbar-width: none
       }
 
       .person {
-        flex: none
+        flex: 0 0 auto
+      }
+
+      .insp-body,
+      .insp-body pre,
+      .code-card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch
       }
 
       .qgrid {
@@ -2589,11 +2617,111 @@
       }
 
       .hero {
-        padding-top: 120px
+        padding-top: 110px;
+        padding-bottom: 48px
+      }
+
+      .hero .wrap {
+        width: 100%;
+        padding: 0 20px
+      }
+
+      .hero h1 {
+        font-size: clamp(2.2rem, 8vw, 3.25rem);
+        max-width: 100%;
+        text-align: center;
+        margin-top: 22px
+      }
+
+      .hero .sub {
+        max-width: 100%;
+        text-align: center;
+        font-size: 1.05rem;
+        margin-top: 16px
       }
 
       .cmd-card {
-        padding: 24px 20px
+        width: 100%;
+        max-width: 100%;
+        margin-top: 32px;
+        padding: 22px 18px
+      }
+
+      .hosts {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 36px
+      }
+
+      .hosts ul {
+        justify-content: center;
+        gap: 8px
+      }
+
+      .install {
+        padding: 28px 18px;
+        border-radius: var(--r-md);
+        gap: 28px
+      }
+
+      .install h2 {
+        font-size: clamp(1.75rem, 6.5vw, 2.25rem);
+        max-width: none
+      }
+
+      .install p {
+        font-size: 1rem;
+        margin-top: 10px
+      }
+
+      .install .seg {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 22px;
+        gap: 4px
+      }
+
+      .install .seg button {
+        font-size: 12px;
+        padding: 6px 12px
+      }
+
+      .install .btns {
+        margin-top: 22px;
+        gap: 10px
+      }
+
+      .install .btns .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        text-align: center;
+        font-size: 13.5px;
+        padding: 10px 16px
+      }
+
+      .cfg {
+        max-width: 100%;
+        border-radius: 16px
+      }
+
+      .cfg-top {
+        padding: 10px 14px;
+        font-size: 12px
+      }
+
+      .cfg-top button {
+        padding: 6px 12px;
+        font-size: 12px
+      }
+
+      .cfg pre {
+        padding: 18px 16px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch
       }
 
       .score {
