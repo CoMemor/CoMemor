@@ -2,6 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://prasannasais.github.io/CoMemor/sitemap.xml
-# When switching to a custom domain on Cloudflare Pages, change to:
-# Sitemap: https://YOUR_DOMAIN/sitemap.xml
+Sitemap: https://comemor.tech/sitemap.xml
