@@ -1,7 +1,29 @@
 # System Limitations & Threat Boundaries
 
-> **Document Status:** Released — Version 0.1.0  
+> **Document Status:** Current — updated for v1.1 development (Phases 1–4 complete)  
 > **Audience:** Operators, Security Reviewers, Evaluators  
+
+> [!NOTE]
+> This document reflects the current state of the codebase including all v1.1 remediation phases.
+> For the original v1.0.0 limitations baseline, see `docs/production-readiness-audit.md` (historical).
+
+---
+
+## 0. Improvements in v1.1 (Phases 1–4)
+
+The following limitations identified during the Phase 0 audit have been remediated:
+
+| Finding | Remediation |
+|---------|------------|
+| **F-01** Wilson scores populated without real outcome events | Verification events now stored in `verification-events.jsonl`; Wilson scores require actual `record_outcome` calls |
+| **F-02** Long logs swamp retrieval signal | `extractDiagnosticSignals()` extracts error codes, stack frames, and tokens before FTS5 query construction |
+| **F-03** JSONL corruption undetected | Corrupt lines preserved as `{corruptedLineHash, raw}`; recovery is logged and observable |
+| **F-04** Risk level labels without explanation | `assessRisk()` returns concrete `riskReasons` per command; generic labels removed |
+| **F-05** Package manager always hardcoded as `npm` | `buildEnvironmentSnapshot()` infers package manager from command, `packageManager` field, or lockfile; falls back to `'unknown'` |
+| **C-01** Duplicate verification attempts | 5-minute idempotency window per record; duplicate attempts rejected with structured error |
+| **C-02** FTS5 not in transaction | JSONL + FTS5 writes now atomic; partial writes roll back |
+| **C-03** Corrupt recovery unobservable | `reconciliation.json` records `{rebuiltAt, recordCount, corruptedLines}` |
+| **X-02** "Sandboxed"/"safe to execute" in responses | These phrases permanently removed from all `verifyFix` and `validateCommand` responses |
 
 ---
 
@@ -106,3 +128,33 @@ Empirical measurement using the adversarial benchmark suite (`tests/security/adv
 3. **Sub-Threshold / Truncated Keys:** Partial keys under 14 characters for regex or under 24 characters for entropy analysis are not redacted to prevent catastrophic false-positive rates on normal code identifiers.
 4. **Hexadecimal Secrets Without Known Prefixes:** The hexadecimal character set (`0-9`, `a-f`) possesses a theoretical maximum Shannon entropy of $H_{max} = \log_2(16) = 4.0\text{ bits/char}$. Consequently, purely hexadecimal tokens without a recognized pattern prefix cannot meet the $4.5\text{ bits/char}$ threshold required to distinguish Base64 secrets from natural English prose.
 
+
+---
+
+## 5. Remaining Limitations After v1.1 Remediation (Phases 1–4)
+
+The following limitations remain known after the v1.1 remediation cycle and are explicitly documented here. They are not fixed in Phases 1–4 and require separate scope to address.
+
+### 5.1 Verification Evidence Boundaries
+
+- **Host-Reported Only:** All verification outcomes are labelled `host_reported` or `human_reported`. CoMemor has no independent authentication mechanism to validate that the reported outcome matches what the host agent actually observed. A malicious or malfunctioning host could report false outcomes.
+- **Wilson Score Minimum N:** The Wilson lower bound is statistically meaningful only with multiple outcome events. A record with a single successful outcome yields a Wilson lower bound of approximately 0.21 (95% CI), which may be misleadingly low or high depending on direction. Users should interpret confidence scores with the event count in view.
+- **No Cross-Repository Deduplication:** Verification events are scoped to a single `AGENT_MEMORY_REPO` identifier. If the same fix is applied across multiple repositories under different identifiers, outcome evidence is not shared.
+
+### 5.2 Retrieval Quality Boundaries
+
+- **FTS5 Lexical Retrieval Only:** Retrieval uses exact SHA-256 fingerprint matching and FTS5 BM25 token overlap. Semantic embedding retrieval (vector similarity) is not implemented. Structurally different phrasings of the same error may not match.
+- **Benchmark Dataset Scope:** Retrieval quality benchmarks (`tests/integration/retrieval-quality.test.ts`) use 5 fixture records covering TypeScript, Node, Python, and port-collision errors. Results within this corpus do not guarantee generalization to uncurated real-world repositories.
+- **Diagnostic Signal Heuristics:** `extractDiagnosticSignals()` uses pattern-based extraction for error codes, file paths, and stack frames. Novel error formats or deeply wrapped log output may not yield useful signals, falling back to raw token overlap.
+
+### 5.3 Environment Metadata Limitations
+
+- **Package Manager Inference Is Best-Effort:** `buildEnvironmentSnapshot()` infers the package manager from the command binary, `packageManager` field, and lockfiles. Monorepos with mixed package managers, or projects using non-standard tooling, may produce `'ambiguous'` or `'unknown'` results.
+- **No Runtime Version Capture:** The snapshot records `process.version` (the Node.js version of the MCP server process), not the Node.js version of the environment where the fix was run. These may differ in containerized or CI environments.
+- **Lockfile Hashes Are Point-in-Time:** Hashes are captured when `record_failure` is called. If lockfiles change after recording, staleness detection will flag the record correctly, but the original hash reflects the state at record time only.
+
+### 5.4 Command Policy Limitations
+
+- **Allowlist Is Not an OS Sandbox:** The binary allowlist prevents unrecognized binaries from being proposed, but it does not sandbox execution at the OS level. Allowed binaries (`npm`, `cargo`, `python`, etc.) can still perform arbitrary operations within the host process's privileges when the host executes the proposed command.
+- **Risk Assessment Is Static:** `assessRisk()` applies static pattern matching to the command string. It does not inspect the actual content of scripts referenced by `npm run`, `python script.py`, or `cargo build`. The host agent or IDE must perform its own review before executing any proposal.
+- **No Network-Level Restriction:** CoMemor has no mechanism to prevent an allowed binary from making network calls. `npx` and `bunx` are flagged `high` risk precisely because they download and execute remote packages, but the flag is informational — it does not prevent execution at the network level.

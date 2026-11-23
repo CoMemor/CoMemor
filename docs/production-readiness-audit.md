@@ -5,6 +5,12 @@
 > **Auditor:** Senior Security, Reliability, & Platform Reviewer  
 > **Specification Target:** Model Context Protocol (MCP) `2026-07-28`  
 
+> [!NOTE]
+> **Historical Document — Scope: v1.0.0 (audited 2026-09-20).**
+> This audit covers the v1.0.0 codebase only. It does not reflect remediation work completed in
+> the v1.1 development cycle (Phases 1–4). Do not interpret verdicts here as applying to the
+> current HEAD or any subsequent release. See `CHANGELOG.md` `[Unreleased]` for v1.1 changes.
+
 ---
 
 ## Executive Summary & Sign-Off Matrix
@@ -568,7 +574,7 @@
     - `[0.7.0]`: Phase 7 Safe workflow prompts, resource endpoints, list memory stats.
     - `[0.6.0]`: Phase 6 Memory Console dashboard bridge & frontend.
     - `[0.5.0]`: Phase 5 Retrieval poisoning heuristics and sanitization envelopes.
-    - `[0.4.0]`: Phase 4 Command policy sandboxing and approval queues.
+    - `[0.4.0]`: Phase 4 Command policy validation and approval queues.
     - `[0.3.0]`: Phase 3 Versioned output normalization and fuzzy similarity matching.
     - `[0.2.0]`: Phase 2 Vertical slice (`record_failure` and `find_fix`).
     - `[0.1.0]`: Phase 1 Architecture, ADRs, schema validation.
@@ -658,7 +664,7 @@
   - **0 DEFERRED** (Zero postponed items).
 - **Core Production Guarantees Verified:**
   1. **Protocol Framing Invariant:** Zero `console.log` or informational output touches `stdout`. MCP JSON-RPC protocol framing is strictly preserved across all code paths.
-  2. **Sandbox Safety:** Command policy allowlist strictly prevents shell escapes and destructive commands. Approval queues cannot be forged via mismatched approval IDs or malformed records.
+  2. **Policy Validation Safety:** Command policy allowlist prevents shell metacharacters, path escapes, and destructive commands. `verify_fix` returns a structured proposal only — it never executes commands. Approval queue entries are audit annotations, not execution authorizations.
   3. **Data Integrity & Concurrency:** Multi-process child processes appending concurrently on Windows/POSIX experience zero line interleaving or data loss; SQLite index rebuild is 100% deterministic.
   4. **Performance SLA:** Lookup p95 is 25.08 ms at 1k records and 128.10 ms at 10k records (well within 200 ms budget).
   5. **Cross-Platform Consistency:** Windows backslash paths in error traces are canonicalized to POSIX forward slashes, producing identical fingerprints across operating systems.
