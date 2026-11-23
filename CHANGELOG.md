@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-11-23
+
+> **Release:** CoMemor v1.1.0 — Reliability & Transparency remediation.  
+> Covers Phase 0 audit findings F-01 through F-05, C-01 through C-03, C-07, C-08, X-01, X-02, X-04.  
+> **38 test files, 363 tests — all passing.** `npm audit --omit=dev`: 0 vulnerabilities.
+
+### Phase 5 — Memory Console Alignment & Documentation Truth (C-07, C-08)
+- **Dashboard "Verified Fixes" card:** Removed stale "dry-run sandbox execution" and "Sandbox-verified" copy; replaced with "Reported verified or operator-reviewed" language.
+- **CHANGELOG / README / docs aligned:** `[0.4.0]` retitled; capabilities table updated; `docs/limitations.md` Section 0 (resolved) and Section 5 (remaining) added; `docs/production-readiness-audit.md` marked historical.
+- **27 automated documentation consistency tests** (`tests/integration/doc-consistency.test.ts`): no unnegated "sandboxed" or "safe to execute" language in docs or runtime responses.
+- **Documentation consistency matrix** published at `docs/phase5-documentation-consistency-matrix.md`.
+
+### Phase 4 — Context-Aware Risk Semantics & Environment Snapshots (F-04, F-05, X-02)
+- **Context-Aware Command Risk Assessment:** `CommandPolicyEngine.assessRisk()` now returns concrete `riskReasons` for each command. `npx`/`bunx` → `high` (remote package download); `npm install`/`pnpm add`/`yarn add` → `medium` (lifecycle scripts); `npm run`/`pnpm run`/`yarn run` → `medium` (project scripts); `python <script.py>` → `medium` (arbitrary script); `go run` → `medium` (compiles and executes); `cargo build/check/run/test` → `medium` (build scripts + proc macros). All other allowlisted commands default to `low` with an explicit review note.
+- **No "Sandboxed" / "Safe to Execute" Language:** These phrases are permanently removed from all `verifyFix` and `validateCommand` responses. Policy assessment is a proposal for review, not an execution authorization.
+- **Environment Snapshot:** New `src/core/environment.ts` captures `EnvironmentSnapshot` at record time. Package manager is inferred in priority order: command binary > `package.json` `packageManager` field > lockfile presence > `'unknown'`. Never silently defaults to `'npm'`. All known lockfiles are SHA-256 hashed.
+- **Tests:** 44 new unit tests (`environment.test.ts`); 20 new security tests (`phase4-risk-semantics.test.ts`).
+
+### Phase 3 — High-Signal Retrieval, Explainability & Quality Benchmarks (F-02)
+- **Diagnostic Signal Extraction:** `extractDiagnosticSignals()` in `src/core/diagnostics.ts` extracts error codes, file paths, stack frames, and relevant tokens from long logs before FTS5 query construction. Prevents irrelevant boilerplate from dominating retrieval.
+- **Retrieval Explanation:** All `find_fix` matches now include a `RetrievalExplanation` field with `candidateSource` (`fts5_bm25` or `relational_scan`), `matchTokens`, `diagnosticSignals`, and `scoringFactors`.
+- **Quality Benchmarks:** 7 integration tests in `retrieval-quality.test.ts` measure Recall@K, Precision@K, and MRR against labelled fixture corpus. Hard negatives (generic boilerplate) verified to produce no high-confidence matches.
+- **Tests:** 11 new unit tests (`diagnostics.test.ts`); 7 new integration tests.
+
+### Phase 2 — Canonical Storage Integrity, SQLite/FTS5 Transactions & Recovery (F-03, C-02, C-03, X-01, X-04)
+- **Atomic FTS5 Transactions:** All JSONL appends and SQLite FTS5 index writes are executed in a single atomic transaction. Partial writes now roll back cleanly.
+- **Corrupt-Line Recovery:** `records.jsonl` lines that fail JSON parsing are preserved as `{corruptedLineHash, raw}` entries rather than silently dropped. Recovery is logged and observable.
+- **Reconciliation Metadata:** Index rebuild now records `{rebuiltAt, recordCount, corruptedLines}` in `.agent-memory/reconciliation.json`. Dashboard can read real state rather than assuming healthy when SQLite opens.
+- **Cross-Process Locking:** `proper-lockfile` guards all JSONL mutations across multiple writer processes.
+- **Tests:** 10 new tests across storage-integrity and reliability-recovery suites.
+
+### Phase 1 — Verification Event Model & Honest Wilson Confidence (F-01, C-01)
+- **Verification Event Store:** New `verification-events.jsonl` append-only event log. Each `record_outcome` call appends a `{recordId, outcome, source, method, timestamp}` event. Duplicate attempts within a 5-minute window on the same record are rejected with an idempotency key.
+- **Honest Wilson Score:** `calculateWilsonLowerBound()` now reads deduplicated events from `verification-events.jsonl` rather than the deprecated `verificationCount`/`successCount` fields in `records.jsonl`. Wilson scores are only populated when actual outcome events exist.
+- **Source Labelling:** Outcomes are labelled `host_reported` or `human_reported`; never claimed as independently authenticated.
+- **Tests:** 32+ unit and integration tests for event model, deduplication, Wilson math, and idempotency.
+
+---
+
 ## [1.0.5] - 2026-11-08
 
 ### Security & Hardening (Phase 1 Audit Implementation)
@@ -81,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.4.0] - Phase 4: Sandboxed Verification & Policy Engine
+## [0.4.0] - Phase 4: Policy Validation & Approval Queue
 - Implemented `verify_fix` tool for safe repair validation.
 - Built `CommandPolicyEngine` enforcing strict binary allowlist (`npm`, `cargo`, `vitest`, etc.) and permanently disallowing destructive commands (`rm`, `sudo`, `git reset --hard`).
 - Implemented two-tier human operator approval queue via `.agent-memory/approvals-pending.jsonl` and `.agent-memory/approvals-resolved.jsonl`.

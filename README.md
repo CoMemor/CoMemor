@@ -45,8 +45,11 @@ CoMemor stores repository-specific engineering failures and their resolutions, t
 | Secret redaction | Regex patterns + Shannon entropy analysis across all stored fields |
 | Heuristic poisoning detection | 7 detectors; quarantines flagged records; wraps retrieved content in untrusted-data envelopes |
 | Staleness tracking | Lockfile hash, normalizer version, TTL-based decay signals |
-| Wilson score confidence | Statistical confidence interval for fix success rate |
-| Policy assessment | `verify_fix` checks proposed commands against an allowlist and returns a structured proposal |
+| Wilson score confidence | Statistical lower bound from explicit outcome events in `verification-events.jsonl`; not auto-populated |
+| Verification event store | `record_outcome` appends deduplicated events; 5-minute idempotency window per record |
+| Policy assessment | `verify_fix` validates proposed commands and returns `riskReasons`; never executes; no "sandboxed"/"safe" claims |
+| Retrieval explainability | Each `find_fix` match includes `explanation` with `candidateSource`, matched tokens, and scoring factors |
+| Environment snapshot | Package manager inferred from command > `packageManager` field > lockfile; falls back to `'unknown'`, not `'npm'` |
 | Memory Console | Built-in local dashboard for audit and observability |
 
 ---

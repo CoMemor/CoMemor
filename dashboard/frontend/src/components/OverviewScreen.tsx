@@ -294,9 +294,8 @@ export function OverviewScreen({ stats, isLoading, onNavigate }: Props): ReactNo
                 content={
                   <>
                     <strong>Verified Fixes</strong>
-
-                    Records that have been explicitly confirmed — either via dry-run sandbox execution
-                    or operator approval. Verified fixes carry higher retrieval weight.
+                    Records that have been confirmed via reported host verification outcomes
+                    or operator review. Verified fixes carry higher retrieval weight.
                   </>
                 }
               />
@@ -306,7 +305,7 @@ export function OverviewScreen({ stats, isLoading, onNavigate }: Props): ReactNo
           <div className="stat-value" style={{ color: 'var(--text-primary)' }}>
             {stats.verifiedCount}
           </div>
-          <div className="stat-subtext">Sandbox-verified or operator-approved</div>
+          <div className="stat-subtext">Reported verified or operator-reviewed</div>
         </div>
 
         <div className="stat-card">

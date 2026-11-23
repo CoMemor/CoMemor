@@ -91,7 +91,7 @@
 - [x] Zero raw outputs logged to stdout (stdio JSON-RPC channel integrity preserved).
 - [x] Multi-tier secret redaction runs before fingerprinting or persistence.
 - [x] All returned memories wrapped in sanitization XML envelopes.
-- [x] Commands restricted to whitelist, and dry-run is required unless explicit human approval is resolved.
+- [x] Commands validated against an allowlist of safe binaries; shell metacharacters, path escapes, and destructive patterns are rejected. `verify_fix` returns a structured proposal only — CoMemor never executes commands.
 
 ---
 
