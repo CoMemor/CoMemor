@@ -72,3 +72,7 @@ dist-benchmark/
 
 # Raw design assets
 Logo maker project*.png
+
+# Cloudflare local variables
+.dev.vars
+.dev.vars.*

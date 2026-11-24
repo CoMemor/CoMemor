@@ -53,7 +53,7 @@ describe('Documentation — no forbidden language', () => {
 
   it('CHANGELOG — has [Unreleased] section for v1.1 work', () => {
     const content = readDoc('CHANGELOG.md');
-    expect(content).toMatch(/\[Unreleased\]/);
+    expect(content).toMatch(/\[1\.1\.0\]|\[Unreleased\]/);
     expect(content).toMatch(/Phase 1/);
     expect(content).toMatch(/Phase 4/);
   });
