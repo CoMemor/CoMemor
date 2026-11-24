@@ -7,17 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2026-11-23
+## [Unreleased] — v1.1 Remediation (Phases 1–4)
 
-> **Release:** CoMemor v1.1.0 — Reliability & Transparency remediation.  
-> Covers Phase 0 audit findings F-01 through F-05, C-01 through C-03, C-07, C-08, X-01, X-02, X-04.  
-> **38 test files, 363 tests — all passing.** `npm audit --omit=dev`: 0 vulnerabilities.
-
-### Phase 5 — Memory Console Alignment & Documentation Truth (C-07, C-08)
-- **Dashboard "Verified Fixes" card:** Removed stale "dry-run sandbox execution" and "Sandbox-verified" copy; replaced with "Reported verified or operator-reviewed" language.
-- **CHANGELOG / README / docs aligned:** `[0.4.0]` retitled; capabilities table updated; `docs/limitations.md` Section 0 (resolved) and Section 5 (remaining) added; `docs/production-readiness-audit.md` marked historical.
-- **27 automated documentation consistency tests** (`tests/integration/doc-consistency.test.ts`): no unnegated "sandboxed" or "safe to execute" language in docs or runtime responses.
-- **Documentation consistency matrix** published at `docs/phase5-documentation-consistency-matrix.md`.
+> **Branch:** `feature/phase4-command-policy-env` and predecessors.
+> These changes are implemented and tested but not yet merged to `main` or released.
+> Do not change historical results in this file or bump the package version until a release is approved.
 
 ### Phase 4 — Context-Aware Risk Semantics & Environment Snapshots (F-04, F-05, X-02)
 - **Context-Aware Command Risk Assessment:** `CommandPolicyEngine.assessRisk()` now returns concrete `riskReasons` for each command. `npx`/`bunx` → `high` (remote package download); `npm install`/`pnpm add`/`yarn add` → `medium` (lifecycle scripts); `npm run`/`pnpm run`/`yarn run` → `medium` (project scripts); `python <script.py>` → `medium` (arbitrary script); `go run` → `medium` (compiles and executes); `cargo build/check/run/test` → `medium` (build scripts + proc macros). All other allowlisted commands default to `low` with an explicit review note.

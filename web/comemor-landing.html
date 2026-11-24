@@ -1505,7 +1505,8 @@
   <script>
 
     const WAITLIST_CONFIG = {
-      endpoint: '/api/waitlist',
+      endpoint: 'https://app.loops.so/api/newsletter-form/cmwrjx8jv0f3d0j1ewvioudnk',
+      mailingListId: 'cmwtlmnt009jx0j4l39fe3jum',
       userGroup: 'team-cloud-waitlist',
       source: 'comemor-waitlist'
     };
@@ -1582,13 +1583,19 @@
         // Honeypot: pretend success so bots learn nothing.
         if ($('wlHp').value) { card.classList.add('done'); return; }
 
+        if (/YOUR_ENDPOINT_ID|YOUR_PUBLIC_LIST_ID/.test(WAITLIST_CONFIG.endpoint + WAITLIST_CONFIG.mailingListId)) {
+          console.warn('[waitlist] Set WAITLIST_CONFIG.endpoint and mailingListId before publishing.');
+          setStatus('The waitlist is not configured yet. Please try again later.');
+          return;
+        }
+
         const data = new FormData(form);
         const body = new URLSearchParams({
           email: String(data.get('email')).trim().toLowerCase(),
           teamSize: data.get('teamSize'),
           primaryHost: data.get('primaryHost'),
-          website: $('wlHp').value || '',
           userGroup: WAITLIST_CONFIG.userGroup,
+          mailingLists: WAITLIST_CONFIG.mailingListId,
           source: WAITLIST_CONFIG.source
         }).toString();
 
