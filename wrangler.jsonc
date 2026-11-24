@@ -1,7 +1,11 @@
 {
   "name": "comemor",
-  "compatibility_date": "2026-11-22",
+  "main": "./cloudflare/waitlist-worker.js",
+  "compatibility_date": "2026-11-24",
+  "keep_vars": true,
   "assets": {
-    "directory": "./web"
+    "directory": "./web",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
   }
 }
