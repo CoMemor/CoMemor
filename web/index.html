@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="1vg3VZmgQpHWwt58Bf5yiXNUFR7dSXyiq-qmbR12jcU" />
 
 
   <link rel="canonical" href="https://comemor.tech/">
@@ -162,51 +163,335 @@
   <link rel="stylesheet" href="assets/site.css?v=1.0.8">
   <!-- Waitlist modal styles (self-contained, all selectors prefixed .wl-) -->
   <style>
-    .wl-dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100%;height:100%;overflow:auto;color:var(--ink,#202124);font-family:Inter,system-ui,sans-serif}
-    .wl-dialog:not([open]){display:none}
-    .wl-dialog::backdrop{background:rgba(32,33,36,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-    .wl-dialog.wl-fallback{position:fixed;inset:0;z-index:1000;background:rgba(32,33,36,.45)}
-    .wl-shell{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px 16px}
-    .wl-card{position:relative;width:100%;max-width:460px;background:var(--bg,#fff);border:1px solid var(--line,#dadce0);border-radius:20px;padding:32px 28px 26px;box-shadow:0 24px 60px -12px rgba(32,33,36,.28);animation:wl-in .28s cubic-bezier(.2,.8,.2,1)}
-    @keyframes wl-in{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
-    .wl-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--ink-2,#5f6368);cursor:pointer;display:grid;place-items:center;transition:background .2s,color .2s}
-    .wl-x:hover{background:rgba(60,64,67,.08);color:var(--ink,#202124)}
-    .wl-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-    .wl-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink-2,#5f6368);margin-bottom:14px}
-    .wl-eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--amber,#F9AB00)}
-    .wl-card h2{font-family:'Plus Jakarta Sans',Inter,sans-serif;font-weight:600;font-size:26px;line-height:1.15;letter-spacing:-.02em;margin:0 0 8px;color:var(--ink,#202124)}
-    .wl-lead{margin:0 0 22px;font-size:14.5px;line-height:1.55;color:var(--ink-2,#5f6368)}
-    .wl-form{display:flex;flex-direction:column;gap:16px}
-    .wl-field{display:flex;flex-direction:column;gap:6px}
-    .wl-field label{font-size:13px;font-weight:500;color:var(--ink,#202124)}
-    .wl-field input,.wl-field select{width:100%;height:46px;padding:0 14px;font:inherit;font-size:15px;color:var(--ink,#202124);background:var(--bg,#fff);border:1px solid var(--line,#dadce0);border-radius:12px;outline:none;transition:border-color .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
-    .wl-field select{padding-right:40px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
-    .wl-field select:invalid{color:var(--ink-3,#80868b)}
-    .wl-field input::placeholder{color:var(--ink-3,#80868b)}
-    .wl-field input:hover,.wl-field select:hover{border-color:#bdc1c6}
-    .wl-field input:focus-visible,.wl-field select:focus-visible{border-color:var(--blue,#1A73E8);box-shadow:0 0 0 3px rgba(26,115,232,.16)}
-    .wl-field.bad input,.wl-field.bad select{border-color:var(--red,#D93025)}
-    .wl-field.bad input:focus-visible,.wl-field.bad select:focus-visible{box-shadow:0 0 0 3px rgba(217,48,37,.14)}
-    .wl-err{min-height:0;font-size:12.5px;color:var(--red,#D93025);display:none}
-    .wl-field.bad .wl-err{display:block}
-    .wl-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0}
-    .wl-submit{width:100%;justify-content:center;margin-top:4px;cursor:pointer}
-    .wl-submit[disabled]{opacity:.65;cursor:progress}
-    .wl-status{display:none;font-size:13.5px;line-height:1.5;padding:10px 12px;border-radius:10px}
-    .wl-status.show{display:block}
-    .wl-status.err{color:#a50e0e;background:rgba(217,48,37,.08)}
-    .wl-fine{margin:14px 0 0;font-size:12px;line-height:1.5;color:var(--ink-3,#80868b);text-align:center}
-    .wl-fine a{color:inherit;text-decoration:underline}
-    .wl-ok{display:none;text-align:center;padding:12px 0 4px}
-    .wl-card.done .wl-form,.wl-card.done .wl-lead,.wl-card.done .wl-fine,.wl-card.done .wl-head{display:none}
-    .wl-card.done .wl-ok{display:block}
-    .wl-ok .tick{width:52px;height:52px;border-radius:50%;background:rgba(30,142,62,.1);color:var(--green,#1E8E3E);display:grid;place-items:center;margin:0 auto 16px}
-    .wl-ok .tick svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-    .wl-ok h2{margin-bottom:8px}
-    .wl-ok p{margin:0 0 20px;font-size:14.5px;line-height:1.55;color:var(--ink-2,#5f6368)}
-    body.wl-open{overflow:hidden}
-    @media (max-width:520px){.wl-card{padding:28px 20px 22px;border-radius:18px}.wl-card h2{font-size:23px}}
-    @media (prefers-reduced-motion:reduce){.wl-card{animation:none}}
+    .wl-dialog {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      max-width: none;
+      max-height: none;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      color: var(--ink, #202124);
+      font-family: Inter, system-ui, sans-serif
+    }
+
+    .wl-dialog:not([open]) {
+      display: none
+    }
+
+    .wl-dialog::backdrop {
+      background: rgba(32, 33, 36, .45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px)
+    }
+
+    .wl-dialog.wl-fallback {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(32, 33, 36, .45)
+    }
+
+    .wl-shell {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px
+    }
+
+    .wl-card {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      background: var(--bg, #fff);
+      border: 1px solid var(--line, #dadce0);
+      border-radius: 20px;
+      padding: 32px 28px 26px;
+      box-shadow: 0 24px 60px -12px rgba(32, 33, 36, .28);
+      animation: wl-in .28s cubic-bezier(.2, .8, .2, 1)
+    }
+
+    @keyframes wl-in {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .wl-x {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 0;
+      background: transparent;
+      color: var(--ink-2, #5f6368);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background .2s, color .2s
+    }
+
+    .wl-x:hover {
+      background: rgba(60, 64, 67, .08);
+      color: var(--ink, #202124)
+    }
+
+    .wl-x svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round
+    }
+
+    .wl-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-2, #5f6368);
+      margin-bottom: 14px
+    }
+
+    .wl-eyebrow i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber, #F9AB00)
+    }
+
+    .wl-card h2 {
+      font-family: 'Plus Jakarta Sans', Inter, sans-serif;
+      font-weight: 600;
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      margin: 0 0 8px;
+      color: var(--ink, #202124)
+    }
+
+    .wl-lead {
+      margin: 0 0 22px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--ink-2, #5f6368)
+    }
+
+    .wl-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .wl-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .wl-field label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink, #202124)
+    }
+
+    .wl-field input,
+    .wl-field select {
+      width: 100%;
+      height: 46px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 15px;
+      color: var(--ink, #202124);
+      background: var(--bg, #fff);
+      border: 1px solid var(--line, #dadce0);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+      -webkit-appearance: none
+    }
+
+    .wl-field select {
+      padding-right: 40px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center
+    }
+
+    .wl-field select:invalid {
+      color: var(--ink-3, #80868b)
+    }
+
+    .wl-field input::placeholder {
+      color: var(--ink-3, #80868b)
+    }
+
+    .wl-field input:hover,
+    .wl-field select:hover {
+      border-color: #bdc1c6
+    }
+
+    .wl-field input:focus-visible,
+    .wl-field select:focus-visible {
+      border-color: var(--blue, #1A73E8);
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, .16)
+    }
+
+    .wl-field.bad input,
+    .wl-field.bad select {
+      border-color: var(--red, #D93025)
+    }
+
+    .wl-field.bad input:focus-visible,
+    .wl-field.bad select:focus-visible {
+      box-shadow: 0 0 0 3px rgba(217, 48, 37, .14)
+    }
+
+    .wl-err {
+      min-height: 0;
+      font-size: 12.5px;
+      color: var(--red, #D93025);
+      display: none
+    }
+
+    .wl-field.bad .wl-err {
+      display: block
+    }
+
+    .wl-hp {
+      position: absolute !important;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0
+    }
+
+    .wl-submit {
+      width: 100%;
+      justify-content: center;
+      margin-top: 4px;
+      cursor: pointer
+    }
+
+    .wl-submit[disabled] {
+      opacity: .65;
+      cursor: progress
+    }
+
+    .wl-status {
+      display: none;
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 10px 12px;
+      border-radius: 10px
+    }
+
+    .wl-status.show {
+      display: block
+    }
+
+    .wl-status.err {
+      color: #a50e0e;
+      background: rgba(217, 48, 37, .08)
+    }
+
+    .wl-fine {
+      margin: 14px 0 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--ink-3, #80868b);
+      text-align: center
+    }
+
+    .wl-fine a {
+      color: inherit;
+      text-decoration: underline
+    }
+
+    .wl-ok {
+      display: none;
+      text-align: center;
+      padding: 12px 0 4px
+    }
+
+    .wl-card.done .wl-form,
+    .wl-card.done .wl-lead,
+    .wl-card.done .wl-fine,
+    .wl-card.done .wl-head {
+      display: none
+    }
+
+    .wl-card.done .wl-ok {
+      display: block
+    }
+
+    .wl-ok .tick {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(30, 142, 62, .1);
+      color: var(--green, #1E8E3E);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px
+    }
+
+    .wl-ok .tick svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    .wl-ok h2 {
+      margin-bottom: 8px
+    }
+
+    .wl-ok p {
+      margin: 0 0 20px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--ink-2, #5f6368)
+    }
+
+    body.wl-open {
+      overflow: hidden
+    }
+
+    @media (max-width:520px) {
+      .wl-card {
+        padding: 28px 20px 22px;
+        border-radius: 18px
+      }
+
+      .wl-card h2 {
+        font-size: 23px
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .wl-card {
+        animation: none
+      }
+    }
   </style>
 </head>
 
@@ -986,7 +1271,9 @@
           </div>
         </div>
       </div>
-      <div class="legal"><span>© <span id="yr">2026</span> CoMemor · Open source under GPL-3.0-only · <a href="privacy-policy" style="color:inherit;text-decoration:underline">Privacy Policy</a></span><span>Built in
+      <div class="legal"><span>© <span id="yr">2026</span> CoMemor · Open source under GPL-3.0-only · <a
+            href="privacy-policy" style="color:inherit;text-decoration:underline">Privacy Policy</a></span><span>Built
+          in
           the open, for agents that remember.</span></div>
     </div>
     <div class="mark" id="mark" aria-hidden="true">CoMemor</div>
@@ -1449,16 +1736,21 @@
   <dialog class="wl-dialog" id="wlDialog" aria-labelledby="wlTitle">
     <div class="wl-shell" id="wlShell">
       <div class="wl-card" id="wlCard">
-        <button class="wl-x" type="button" id="wlClose" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+        <button class="wl-x" type="button" id="wlClose" aria-label="Close"><svg viewBox="0 0 24 24">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg></button>
         <div class="wl-head">
           <span class="wl-eyebrow"><i></i>Waitlist open</span>
           <h2 id="wlTitle">Join the Team Cloud waitlist</h2>
         </div>
-        <p class="wl-lead">Shared, access-controlled memory for your whole team. Tell us a little about your setup and we'll email you when it's ready.</p>
+        <p class="wl-lead">Shared, access-controlled memory for your whole team. Tell us a little about your setup and
+          we'll email you when it's ready.</p>
         <form class="wl-form" id="wlForm" novalidate>
           <div class="wl-field">
             <label for="wlEmail">Work email</label>
-            <input id="wlEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com" maxlength="254" required>
+            <input id="wlEmail" name="email" type="email" inputmode="email" autocomplete="email"
+              placeholder="you@company.com" maxlength="254" required>
             <span class="wl-err" id="wlEmailErr" role="alert"></span>
           </div>
           <div class="wl-field">
@@ -1487,13 +1779,17 @@
             <span class="wl-err" id="wlHostErr" role="alert"></span>
           </div>
           <!-- honeypot: real users never see or fill this -->
-          <div class="wl-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" id="wlHp" tabindex="-1" autocomplete="off"></label></div>
+          <div class="wl-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" id="wlHp"
+                tabindex="-1" autocomplete="off"></label></div>
           <div class="wl-status err" id="wlStatus" role="alert"></div>
           <button class="btn btn-dark btn-lg wl-submit" type="submit" id="wlSubmit">Join the waitlist</button>
         </form>
-        <p class="wl-fine">No spam. Just a heads-up when Team Cloud launches. See our <a href="privacy-policy">Privacy Policy</a>.</p>
+        <p class="wl-fine">No spam. Just a heads-up when Team Cloud launches. See our <a href="privacy-policy">Privacy
+            Policy</a>.</p>
         <div class="wl-ok" id="wlOk" role="status" aria-live="polite">
-          <div class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="tick"><svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12" />
+            </svg></div>
           <h2>You're on the list.</h2>
           <p>Thanks for joining. We'll email you as soon as Team Cloud is ready.</p>
           <button class="btn btn-line btn-lg" type="button" id="wlDone">Done</button>
