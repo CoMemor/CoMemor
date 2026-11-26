@@ -39,12 +39,20 @@
   <link rel="apple-touch-icon" href="assets/comemor-logo.png">
 
   <!-- Fonts & Stylesheet -->
+  <script src="assets/head.js?v=1.1.0"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="assets/site.css?v=1.0.8">
+    media="print" data-async-style>
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  </noscript>
+  <link rel="preload" as="style" href="assets/site.css?v=1.1.0">
+  <link rel="stylesheet" href="assets/site.css?v=1.1.0">
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -120,7 +128,7 @@
   <header class="nav" id="nav">
     <div class="wrap">
       <a class="brand" href="./" aria-label="CoMemor home">
-        <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+        <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
             fetchpriority="high"></span>
         CoMemor <span class="ver">v1.1.0</span>
       </a>
@@ -203,12 +211,12 @@
           <p><strong>CoMemor takes a deterministic approach:</strong></p>
           <div class="arch-card-grid">
             <div class="arch-card">
-              <h4><span>⚡</span> Tier 1: Exact SHA-256 Match</h4>
+              <h3><span>⚡</span> Tier 1: Exact SHA-256 Match</h3>
               <p>Normalizes command strings, exit codes, and sanitized error traces into a deterministic SHA-256
                 fingerprint. Exact recurring failures resolve in <strong>&lt;5ms</strong> with 1.0 confidence.</p>
             </div>
             <div class="arch-card">
-              <h4><span>🔍</span> Tier 2: SQLite FTS5 Lexical Match</h4>
+              <h3><span>🔍</span> Tier 2: SQLite FTS5 Lexical Match</h3>
               <p>For modified error traces, token-overlap BM25 matching ranks candidate fixes against the built-in
                 SQLite index, scored with Wilson confidence intervals.</p>
             </div>
@@ -343,7 +351,7 @@
 
         <!-- TABLE OF CONTENTS (STICKY) -->
         <aside class="doc-toc" aria-label="Table of Contents">
-          <h4>Architecture</h4>
+          <h2>Architecture</h2>
           <ul>
             <li><a href="#philosophy">1. Design Philosophy</a></li>
             <li><a href="#storage">2. Storage Subsystem</a></li>
@@ -362,7 +370,7 @@
       <div class="foot">
         <div>
           <a class="brand" href="./">
-            <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+            <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
                 loading="lazy"></span>
             CoMemor
           </a>
@@ -370,7 +378,7 @@
         </div>
         <div class="cols">
           <div>
-            <h4>Product</h4>
+            <h2>Product</h2>
             <a href="./#capabilities">Capabilities</a>
             <a href="./#tools">MCP Tools</a>
             <a href="architecture.html">Architecture</a>
@@ -378,15 +386,16 @@
             <a href="./#pricing">Pricing</a>
           </div>
           <div>
-            <h4>Guides</h4>
+            <h2>Guides &amp; Docs</h2>
             <a href="guides/ide-setup.html#cursor">Cursor Setup</a>
             <a href="guides/ide-setup.html#claude">Claude Desktop</a>
             <a href="guides/ide-setup.html#vscode">VS Code</a>
             <a href="guides/ide-setup.html#windsurf">Windsurf</a>
             <a href="guides/ide-setup.html#antigravity">Antigravity</a>
+            <a href="docs/threat-model.html">Threat Model</a>
           </div>
           <div>
-            <h4>Resources</h4>
+            <h2>Resources</h2>
             <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub</a>
             <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm</a>
             <a href="privacy-policy">Privacy Policy</a>
@@ -402,35 +411,7 @@
     </div>
   </footer>
 
-  <script>
-    const burger = document.getElementById('burger');
-    function menu(open) {
-      document.body.classList.toggle('menu-open', open);
-      if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      document.body.style.overflow = open ? 'hidden' : '';
-    }
-    if (burger) {
-      burger.addEventListener('click', () => menu(!document.body.classList.contains('menu-open')));
-    }
-    document.querySelectorAll('#mmenu a').forEach(a => a.addEventListener('click', () => menu(false)));
-    window.addEventListener('keydown', e => { if (e.key === 'Escape') menu(false); });
-
-    const nav = document.getElementById('nav');
-    if (nav) {
-      window.addEventListener('scroll', () => {
-        nav.classList.toggle('scrolled', window.scrollY > 24);
-      }, { passive: true });
-    }
-
-    fetch('https://api.github.com/repos/PrasannaSaiS/CoMemor')
-      .then(r => r.json())
-      .then(d => {
-        if (d.stargazers_count !== undefined) {
-          const el = document.getElementById('gh-stars');
-          if (el) el.textContent = d.stargazers_count >= 1000 ? (d.stargazers_count / 1000).toFixed(1) + 'k' : d.stargazers_count;
-        }
-      }).catch(() => { });
-  </script>
+  <script defer src="assets/docs.js?v=1.1.0"></script>
 </body>
 
 </html>

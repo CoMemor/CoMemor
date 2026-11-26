@@ -38,12 +38,20 @@
   <link rel="apple-touch-icon" href="assets/comemor-logo.png">
 
   <!-- Fonts & Stylesheet -->
+  <script src="assets/head.js?v=1.1.0"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="assets/site.css?v=1.0.8">
+    media="print" data-async-style>
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  </noscript>
+  <link rel="preload" as="style" href="assets/site.css?v=1.1.0">
+  <link rel="stylesheet" href="assets/site.css?v=1.1.0">
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -110,7 +118,7 @@
   <header class="nav" id="nav">
     <div class="wrap">
       <a class="brand" href="./" aria-label="CoMemor home">
-        <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+        <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
             fetchpriority="high"></span>
         CoMemor <span class="ver">v1.1.0</span>
       </a>
@@ -297,7 +305,7 @@
 
         <!-- TABLE OF CONTENTS (STICKY) -->
         <aside class="doc-toc" aria-label="Table of Contents">
-          <h4>Privacy Policy</h4>
+          <h2>Privacy Policy</h2>
           <ul>
             <li><a href="#two-modes">1. Two Distinct Products</a></li>
             <li><a href="#information-collected">2. Information Collected</a></li>
@@ -319,7 +327,7 @@
       <div class="foot">
         <div>
           <a class="brand" href="./">
-            <span class="logo"><img src="assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+            <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
                 loading="lazy"></span>
             CoMemor
           </a>
@@ -327,7 +335,7 @@
         </div>
         <div class="cols">
           <div>
-            <h4>Product</h4>
+            <h2>Product</h2>
             <a href="./#capabilities">Capabilities</a>
             <a href="./#tools">MCP Tools</a>
             <a href="./#pricing">Pricing</a>
@@ -336,15 +344,14 @@
             <a href="architecture.html">Architecture</a>
           </div>
           <div>
-            <h4>Guides &amp; Docs</h4>
+            <h2>Guides &amp; Docs</h2>
             <a href="guides/ide-setup.html">IDE Setup Guide</a>
             <a href="architecture.html">Architecture Deep Dive</a>
-            <a href="https://github.com/PrasannaSaiS/CoMemor#readme" target="_blank" rel="noopener">README &amp; Threat
-              Model</a>
+            <a href="docs/threat-model.html">Security &amp; Threat Model</a>
             <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
           </div>
           <div>
-            <h4>Community &amp; Legal</h4>
+            <h2>Community &amp; Legal</h2>
             <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub</a>
             <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm</a>
             <a href="privacy-policy">Privacy Policy</a>
@@ -360,35 +367,7 @@
     </div>
   </footer>
 
-  <script>
-    const burger = document.getElementById('burger');
-    function menu(open) {
-      document.body.classList.toggle('menu-open', open);
-      if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      document.body.style.overflow = open ? 'hidden' : '';
-    }
-    if (burger) {
-      burger.addEventListener('click', () => menu(!document.body.classList.contains('menu-open')));
-    }
-    document.querySelectorAll('#mmenu a').forEach(a => a.addEventListener('click', () => menu(false)));
-    window.addEventListener('keydown', e => { if (e.key === 'Escape') menu(false); });
-
-    const nav = document.getElementById('nav');
-    if (nav) {
-      window.addEventListener('scroll', () => {
-        nav.classList.toggle('scrolled', window.scrollY > 24);
-      }, { passive: true });
-    }
-
-    fetch('https://api.github.com/repos/PrasannaSaiS/CoMemor')
-      .then(r => r.json())
-      .then(d => {
-        if (d.stargazers_count !== undefined) {
-          const el = document.getElementById('gh-stars');
-          if (el) el.textContent = d.stargazers_count >= 1000 ? (d.stargazers_count / 1000).toFixed(1) + 'k' : d.stargazers_count;
-        }
-      }).catch(() => { });
-  </script>
+  <script defer src="assets/docs.js?v=1.1.0"></script>
 </body>
 
 </html>

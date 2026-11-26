@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoMemor Security &amp; Threat Model — Local MCP Safety Boundaries</title>
+  <meta name="description"
+    content="Review CoMemor's security threat model: non-executing verify_fix contract, two-layer secret redaction, heuristic prompt-injection quarantine, and honest system boundaries.">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+
+  <link rel="canonical" href="https://comemor.tech/docs/threat-model.html">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="CoMemor">
+  <meta property="og:title" content="CoMemor Security &amp; Threat Model — Local MCP Safety Boundaries">
+  <meta property="og:description"
+    content="Detailed threat model, trust boundaries, secret redaction guarantees, and non-executing MCP contract for CoMemor v1.1.0.">
+  <meta property="og:url" content="https://comemor.tech/docs/threat-model.html">
+  <meta property="og:image" content="https://comemor.tech/assets/og-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CoMemor Security &amp; Threat Model">
+  <meta name="twitter:description"
+    content="CoMemor never executes commands on the server. Review secret redaction, quarantine, and policy validation architecture.">
+  <meta name="twitter:image" content="https://comemor.tech/assets/og-image.png">
+
+  <link rel="icon" type="image/png" href="../assets/comemor-logo.png">
+  <link rel="apple-touch-icon" href="../assets/comemor-logo.png">
+
+  <script src="../assets/head.js?v=1.1.0"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    media="print" data-async-style>
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  </noscript>
+  <link rel="preload" as="style" href="../assets/site.css?v=1.1.0">
+  <link rel="stylesheet" href="../assets/site.css?v=1.1.0">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "CoMemor Security & Threat Model — Local MCP Safety Boundaries",
+    "description": "Security guarantees, trust boundaries, and known limitations of CoMemor v1.1.0.",
+    "url": "https://comemor.tech/docs/threat-model.html",
+    "datePublished": "2026-11-26",
+    "dateModified": "2026-11-26",
+    "author": { "@type": "Organization", "name": "CoMemor", "url": "https://comemor.tech/" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CoMemor",
+      "logo": { "@type": "ImageObject", "url": "https://comemor.tech/assets/comemor-logo.png" }
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="nav" id="nav">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="CoMemor home">
+        <span class="logo"><img src="../assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32" fetchpriority="high"></span>
+        CoMemor <span class="ver">v1.1.0</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="../#capabilities">Capabilities</a>
+        <a href="../#tools">MCP Tools</a>
+        <a href="../#pricing">Pricing</a>
+        <a href="../#faq">FAQ</a>
+        <a href="../guides/ide-setup.html">IDE Setup</a>
+        <a href="../architecture.html">Architecture</a>
+      </nav>
+      <div class="nav-r">
+        <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
+          <svg class="i"><use href="#i-star" /></svg><span id="gh-stars">Star</span>
+        </a>
+        <a class="btn btn-dark" href="../#install">Get started <svg class="i arr" style="width:14px;height:14px"><use href="#i-arrow" /></svg></a>
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mmenu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mmenu">
+    <a class="ml" href="../#capabilities">Capabilities</a>
+    <a class="ml" href="../#tools">MCP Tools</a>
+    <a class="ml" href="../#pricing">Pricing</a>
+    <a class="ml" href="../#faq">FAQ</a>
+    <a class="ml" href="../guides/ide-setup.html">IDE Setup Guide</a>
+    <a class="ml" href="../architecture.html">Architecture Deep Dive</a>
+    <a class="btn btn-dark btn-lg" href="../#install" style="align-self:flex-start">Get started</a>
+  </div>
+
+  <main id="main">
+    <section class="doc-hero">
+      <div class="wrap">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../">Home</a>
+          <span class="sep">/</span>
+          <a href="../architecture.html">Architecture</a>
+          <span class="sep">/</span>
+          <span aria-current="page">Security &amp; Threat Model</span>
+        </nav>
+        <span class="eyebrow" style="margin-top:12px;display:inline-block"><i style="background:var(--red)"></i>Security Specification</span>
+        <h1>CoMemor Security &amp; Threat Model</h1>
+        <p class="lead">Transparent documentation of CoMemor v1.1.0 trust boundaries, non-executing command policy, secret redaction layers, and explicit heuristic limits.</p>
+      </div>
+    </section>
+
+    <section class="doc-body">
+      <div class="wrap doc-grid">
+        <article class="prose">
+          <div class="callout warning">
+            <p><strong>Non-Execution Invariant:</strong> CoMemor has zero server-side command execution capability. <code>verify_fix</code> always returns <code>executedByServer: false</code> and <code>requiresHostConfirmation: true</code>. Allowlist policy validation is NOT an OS sandbox.</p>
+          </div>
+
+          <h2 id="trust-boundary">1. Trust Boundary &amp; Execution Policy</h2>
+          <p>CoMemor treats all repository logs, command outputs, and previously persisted records as untrusted input:</p>
+          <ul>
+            <li><strong>Policy Validation Only:</strong> <code>verify_fix</code> checks proposed commands against an allowlist of binaries, rejects shell metacharacters (<code>; &amp; | &gt; &lt; ` $(</code>), prevents workspace path escapes, and attaches context-aware <code>riskReasons</code> (for example elevating <code>npx</code> remote execution to <code>high</code> risk and <code>npm install</code> lifecycle scripts to <code>medium</code> risk).</li>
+            <li><strong>Dashboard Isolation:</strong> <code>dashboard-bridge</code> runs in a separate process bound exclusively to <code>127.0.0.1</code> and opens SQLite in read-only mode. Operator decisions recorded in <code>approvals-resolved.jsonl</code> are audit annotations only.</li>
+          </ul>
+
+          <h2 id="redaction">2. Dual-Layer Secret Redaction</h2>
+          <p>Every field passes through redaction before fingerprinting or disk persistence:</p>
+          <ul>
+            <li><strong>Pattern Detection:</strong> Deterministic regex scrubbing for GitHub PATs, AWS/OpenAI/Anthropic keys, JWTs, PEM blocks, and URI basic-auth credentials.</li>
+            <li><strong>Shannon Entropy Gating:</strong> Flags unlabelled high-entropy tokens (&ge; 24 chars, <code>H(X) &ge; 4.5</code> bits/char).</li>
+            <li><strong>Honest Limitation:</strong> Redaction is heuristic and cannot guarantee coverage of interleaved whitespace or short truncated secrets. Review <code>.agent-memory/records.jsonl</code> before committing to public repositories.</li>
+          </ul>
+
+          <h2 id="poisoning">3. Persisted-Retrieval Poisoning Defense</h2>
+          <p>To mitigate indirect prompt injection stored inside build outputs:</p>
+          <ul>
+            <li>Zero-width characters are stripped and Cyrillic/Greek homoglyphs are canonicalized before analysis.</li>
+            <li>Seven heuristic detectors flag authority overrides, fake LLM delimiters, data exfiltration vectors, and abnormally high imperative-verb density.</li>
+            <li>All returned records are escaped and wrapped inside explicit <code>&lt;untrusted_historical_memory&gt;</code> XML boundaries.</li>
+          </ul>
+
+          <h2 id="verification">4. Honest Verification &amp; Confidence Scoring</h2>
+          <p>Wilson lower-bound scores in v1.1.0 are derived strictly from deduplicated outcome events stored in <code>.agent-memory/verification-events.jsonl</code> (5-minute idempotency window per record). Outcomes are visibly labelled <code>host_reported</code> or <code>human_reported</code> rather than claiming independent execution proof.</p>
+
+          <div style="margin-top:48px;padding-top:24px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px">
+            <a href="../architecture.html" class="btn btn-line">← Architecture Deep Dive</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor/blob/main/docs/threat-model.md" target="_blank" rel="noopener" class="btn btn-dark">View Source Spec on GitHub →</a>
+          </div>
+        </article>
+
+        <aside class="doc-toc" aria-label="Table of Contents">
+          <h2>On this page</h2>
+          <ul>
+            <li><a href="#trust-boundary">1. Trust Boundary</a></li>
+            <li><a href="#redaction">2. Secret Redaction</a></li>
+            <li><a href="#poisoning">3. Poisoning Defense</a></li>
+            <li><a href="#verification">4. Verification Events</a></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <a class="brand" href="../">
+            <span class="logo"><img src="../assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32" loading="lazy"></span>
+            CoMemor
+          </a>
+          <p>Persistent engineering memory for AI coding agents.</p>
+        </div>
+        <div class="cols">
+          <div>
+            <h2>Product</h2>
+            <a href="../#capabilities">Capabilities</a>
+            <a href="../#tools">MCP Tools</a>
+            <a href="../#pricing">Pricing</a>
+            <a href="../#faq">FAQ</a>
+          </div>
+          <div>
+            <h2>Guides &amp; Docs</h2>
+            <a href="../guides/ide-setup.html">IDE Setup Guide</a>
+            <a href="cursor-mcp-setup.html">Cursor MCP Setup</a>
+            <a href="claude-code-setup.html">Claude Code Setup</a>
+            <a href="../architecture.html">Architecture Deep Dive</a>
+            <a href="threat-model.html">Security &amp; Threat Model</a>
+          </div>
+          <div>
+            <h2>Resources</h2>
+            <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm</a>
+            <a href="../privacy-policy">Privacy Policy</a>
+            <a href="../llms.txt">llms.txt</a>
+          </div>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© <span id="yr">2026</span> CoMemor · Open source under GPL-3.0-only</span>
+        <span>Built in the open, for agents that remember.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script defer src="../assets/docs.js?v=1.1.0"></script>
+</body>
+
+</html>

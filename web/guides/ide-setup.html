@@ -39,12 +39,20 @@
   <link rel="apple-touch-icon" href="../assets/comemor-logo.png">
 
   <!-- Fonts & Stylesheet -->
+  <script src="../assets/head.js?v=1.1.0"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="../assets/site.css?v=1.0.8">
+    media="print" data-async-style>
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  </noscript>
+  <link rel="preload" as="style" href="../assets/site.css?v=1.1.0">
+  <link rel="stylesheet" href="../assets/site.css?v=1.1.0">
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -126,7 +134,7 @@
   <header class="nav" id="nav">
     <div class="wrap">
       <a class="brand" href="../" aria-label="CoMemor home">
-        <span class="logo"><img src="../assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+        <span class="logo"><img src="../assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
             fetchpriority="high"></span>
         CoMemor <span class="ver">v1.1.0</span>
       </a>
@@ -204,7 +212,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>.cursor/mcp.json</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy JSON</button>
+              <button class="code-copy-btn">Copy JSON</button>
             </div>
             <pre><code>{
   "mcpServers": {
@@ -222,7 +230,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>Paste into Cursor Chat</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Prompt</button>
+              <button class="code-copy-btn">Copy Prompt</button>
             </div>
             <pre><code>Set up the CoMemor MCP server for this Cursor project.
 
@@ -252,7 +260,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>claude_desktop_config.json</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy JSON</button>
+              <button class="code-copy-btn">Copy JSON</button>
             </div>
             <pre><code>{
   "mcpServers": {
@@ -270,7 +278,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>Paste into Claude Desktop Chat</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Prompt</button>
+              <button class="code-copy-btn">Copy Prompt</button>
             </div>
             <pre><code>Set up the CoMemor MCP server for Claude Desktop.
 
@@ -296,7 +304,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>.vscode/mcp.json</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy JSON</button>
+              <button class="code-copy-btn">Copy JSON</button>
             </div>
             <pre><code>{
   "servers": {
@@ -313,7 +321,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>Paste into Copilot Chat / Continue</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Prompt</button>
+              <button class="code-copy-btn">Copy Prompt</button>
             </div>
             <pre><code>Set up the CoMemor MCP server for VS Code.
 
@@ -335,7 +343,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>~/.codeium/windsurf/mcp_config.json</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy JSON</button>
+              <button class="code-copy-btn">Copy JSON</button>
             </div>
             <pre><code>{
   "mcpServers": {
@@ -352,7 +360,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>Paste into Windsurf Cascade</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Prompt</button>
+              <button class="code-copy-btn">Copy Prompt</button>
             </div>
             <pre><code>Set up the CoMemor MCP server for Windsurf.
 
@@ -374,7 +382,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>~/.gemini/antigravity/mcp.json</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy JSON</button>
+              <button class="code-copy-btn">Copy JSON</button>
             </div>
             <pre><code>{
   "mcpServers": {
@@ -397,7 +405,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>AGENTS.md (in repository root)</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Rules</button>
+              <button class="code-copy-btn">Copy Rules</button>
             </div>
             <pre><code>You have access to the CoMemor MCP server which stores and retrieves error fixes for this project.
 
@@ -416,7 +424,7 @@ Rules:
           <div class="code-block">
             <div class="code-header">
               <span>Terminal</span>
-              <button class="code-copy-btn" onclick="copySnippet(this)">Copy Command</button>
+              <button class="code-copy-btn">Copy Command</button>
             </div>
             <pre><code>npx comemor-dashboard</code></pre>
           </div>
@@ -433,7 +441,7 @@ Rules:
 
         <!-- TABLE OF CONTENTS (STICKY) -->
         <aside class="doc-toc" aria-label="Table of Contents">
-          <h4>On this page</h4>
+          <h2>On this page</h2>
           <ul>
             <li><a href="#cursor">Cursor</a></li>
             <li><a href="#claude">Claude Desktop</a></li>
@@ -454,7 +462,7 @@ Rules:
       <div class="foot">
         <div>
           <a class="brand" href="../">
-            <span class="logo"><img src="../assets/comemor-logo.png" alt="CoMemor logo" width="32" height="32"
+            <span class="logo"><img src="../assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
                 loading="lazy"></span>
             CoMemor
           </a>
@@ -462,7 +470,7 @@ Rules:
         </div>
         <div class="cols">
           <div>
-            <h4>Product</h4>
+            <h2>Product</h2>
             <a href="../#capabilities">Capabilities</a>
             <a href="../#tools">MCP Tools</a>
             <a href="../architecture.html">Architecture</a>
@@ -470,15 +478,17 @@ Rules:
             <a href="../#pricing">Pricing</a>
           </div>
           <div>
-            <h4>Guides</h4>
+            <h2>Guides &amp; Docs</h2>
             <a href="#cursor">Cursor Setup</a>
             <a href="#claude">Claude Desktop</a>
             <a href="#vscode">VS Code</a>
             <a href="#windsurf">Windsurf</a>
-            <a href="#antigravity">Antigravity</a>
+            <a href="../docs/cursor-mcp-setup.html">Cursor MCP Setup</a>
+            <a href="../docs/claude-code-setup.html">Claude Code Setup</a>
+            <a href="../docs/threat-model.html">Security &amp; Threat Model</a>
           </div>
           <div>
-            <h4>Resources</h4>
+            <h2>Resources</h2>
             <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub</a>
             <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm</a>
             <a href="../privacy-policy">Privacy Policy</a>
@@ -494,48 +504,7 @@ Rules:
     </div>
   </footer>
 
-  <script>
-    function copySnippet(btn) {
-      const code = btn.closest('.code-block').querySelector('pre code').innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        const originalText = btn.innerText;
-        btn.innerText = 'Copied!';
-        btn.style.background = 'rgba(30,142,62,.3)';
-        setTimeout(() => {
-          btn.innerText = originalText;
-          btn.style.background = '';
-        }, 1800);
-      });
-    }
-
-    const burger = document.getElementById('burger');
-    function menu(open) {
-      document.body.classList.toggle('menu-open', open);
-      if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      document.body.style.overflow = open ? 'hidden' : '';
-    }
-    if (burger) {
-      burger.addEventListener('click', () => menu(!document.body.classList.contains('menu-open')));
-    }
-    document.querySelectorAll('#mmenu a').forEach(a => a.addEventListener('click', () => menu(false)));
-    window.addEventListener('keydown', e => { if (e.key === 'Escape') menu(false); });
-
-    const nav = document.getElementById('nav');
-    if (nav) {
-      window.addEventListener('scroll', () => {
-        nav.classList.toggle('scrolled', window.scrollY > 24);
-      }, { passive: true });
-    }
-
-    fetch('https://api.github.com/repos/PrasannaSaiS/CoMemor')
-      .then(r => r.json())
-      .then(d => {
-        if (d.stargazers_count !== undefined) {
-          const el = document.getElementById('gh-stars');
-          if (el) el.textContent = d.stargazers_count >= 1000 ? (d.stargazers_count / 1000).toFixed(1) + 'k' : d.stargazers_count;
-        }
-      }).catch(() => { });
-  </script>
+  <script defer src="../assets/docs.js?v=1.1.0"></script>
 </body>
 
 </html>

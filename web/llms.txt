@@ -1,0 +1,33 @@
+# CoMemor
+
+> Persistent, local-first engineering memory MCP server (v1.1.0) for AI coding agents. Fix an error once; retrieve the verified resolution deterministically on every future session.
+
+CoMemor runs locally over stdio JSON-RPC (Node.js >= 22.5.0 using built-in `node:sqlite`), requires zero external APIs or cloud telemetry, and enforces a strict non-executing MCP policy contract (`executedByServer: false`).
+
+## Quickstart
+
+- Install & run via npm: `npx comemor`
+- Launch local Memory Console: `npx comemor-dashboard` (binds strictly to `127.0.0.1:4321`)
+- License: `GPL-3.0-only`
+
+## MCP Tools
+
+- `find_fix`: Exact SHA-256 fingerprint match + SQLite FTS5 lexical retrieval with explicit matching signals (`RetrievalExplanation`) and Wilson confidence scores.
+- `record_failure`: Persists failure + resolution pairs to `.agent-memory/records.jsonl` after regex + Shannon entropy secret redaction and heuristic poisoning checks.
+- `verify_fix`: Static command policy assessment (allowlisted binaries, workspace containment, shell metacharacter blocking, context-aware `riskReasons`). Never executes commands.
+- `list_memory_stats`: Returns aggregate counts for stored records, quarantined items, pending approvals, and reconciliation status.
+
+## Documentation & Guides
+
+- [Homepage](https://comemor.tech/): Overview, live retrieval proof, and MCP contract summary.
+- [IDE Setup Guide](https://comemor.tech/guides/ide-setup.html): Step-by-step setup for Cursor, Claude Desktop, VS Code, Windsurf, and Google Antigravity.
+- [Cursor MCP Setup](https://comemor.tech/docs/cursor-mcp-setup.html): `.cursor/mcp.json` and `.cursor/rules` setup for Cursor IDE.
+- [Claude Code Setup](https://comemor.tech/docs/claude-code-setup.html): CLI and `CLAUDE.md` configuration for Claude Code & Claude Desktop.
+- [Architecture Deep Dive](https://comemor.tech/architecture.html): Append-only JSONL storage, SQLite FTS5 indexing, diagnostic signal extraction, and `dashboard-bridge`.
+- [Security & Threat Model](https://comemor.tech/docs/threat-model.html): Trust boundaries, non-executing policy contract, secret redaction limits, and prompt-injection quarantine.
+- [Privacy Policy](https://comemor.tech/privacy-policy): Data handling for the local MCP server and Team Cloud waitlist.
+
+## Source & Packages
+
+- GitHub: https://github.com/PrasannaSaiS/CoMemor
+- npm: https://www.npmjs.com/package/comemor

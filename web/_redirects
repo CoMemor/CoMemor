@@ -1,4 +1,6 @@
-# Cloudflare Pages Redirects
+# Redirects
 /comemor-landing.html       /                            301
 /index.html                 /                            301
 /privacy-policy.html        /privacy-policy              301
+/docs/architecture          /architecture.html           301
+/docs/architecture.html     /architecture.html           301
