@@ -195,7 +195,7 @@ This is more significant than a cosmetic documentation issue.
 The current public main branch has a mismatch between the current implementation and older technical documentation.
 
 Examples include:
-- CHANGELOG.md currently stops at 1.0.5, while the package is 1.0.7.
+- CHANGELOG.md currently stops at 1.0.5, while the package is 1.1.0.
 - docs/limitations.md retains older version framing.
 - docs/dashboard-spec.md describes the old approval execution architecture and older storage assumptions.
 - docs/production-readiness-audit.md contains old claims about a command execution sandbox and approval verification.
@@ -217,9 +217,9 @@ Changelog	Released changes only
 Production-readiness audit	Historical audit evidence, with dated scope
 ADRs	Decisions and trade-offs
 
-Do not simply change every old document header to 1.0.7. A historical audit should retain the version and date it actually evaluated. Mark it as historical and publish a new audit for the current release.
+Do not simply change every old document header to 1.1.0. A historical audit should retain the version and date it actually evaluated. Mark it as historical and publish a new audit for the current release.
 
-Also, the current public branch is internally presenting 1.0.7 while its changelog ends at 1.0.5. That needs to be resolved before the next release.
+Also, the current public branch is internally presenting 1.1.0 while its changelog ends at 1.0.5. That needs to be resolved before the next release.
 F-07 — Benchmark transparency
 Medium priority — confirmed, with an important qualification
 Your latency figures are useful, but they need to be presented with the right context.
