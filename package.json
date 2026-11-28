@@ -1,6 +1,6 @@
 {
   "name": "comemor",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CoMemor — repository-scoped AI agent memory MCP server. Records errors and fixes, redacts secrets, and surfaces relevant context to your AI coding tools.",
   "keywords": [
     "mcp",
