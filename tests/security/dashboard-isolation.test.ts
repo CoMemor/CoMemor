@@ -185,4 +185,96 @@ describe('Dashboard Process Isolation & Security Invariants', () => {
 
     storage.close();
   });
+
+  // ─── 5. Verification Events & Provenance Read-Only Aggregation ────────────
+  it('merges verification-events.jsonl summaries into stats, list, and detail without mutating storage', () => {
+    const recordData = {
+      schemaVersion: 1,
+      id: 'rec_bridge_test',
+      createdAt: new Date().toISOString(),
+      repositoryId: 'test-repo',
+      command: 'npm run build',
+      exitCode: 1,
+      rawOutputRedacted: 'error TS2322',
+      normalizedOutput: 'error TS2322',
+      fingerprint: 'sha256:abc',
+      normalizerVersion: 1,
+      fix: { commands: ['npm run build'], explanation: 'Fixed type error', risk: 'low' },
+      environment: { os: 'linux', node: '22', packageManager: 'npm', lockfileHashes: {} },
+      verification: {
+        status: 'unknown',
+        verifiedAt: null,
+        method: 'unverified',
+        wilsonLowerBound: null,
+      },
+      provenance: { author: 'alice', commit: 'deadbeef123456', branch: 'feat/fix', isDirty: false },
+      supersedes: null,
+      tags: [],
+      poisoningFlag: null,
+    };
+
+    const writerDb = new DatabaseSync(dbPath);
+    writerDb
+      .prepare(
+        `INSERT INTO records (id, fingerprint, command, command_family, exit_code, repository_id, created_at, normalizer_version, is_quarantined, data)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        recordData.id,
+        recordData.fingerprint,
+        recordData.command,
+        'npm',
+        recordData.exitCode,
+        recordData.repositoryId,
+        recordData.createdAt,
+        recordData.normalizerVersion,
+        0,
+        JSON.stringify(recordData),
+      );
+    writerDb.close();
+
+    const eventsPath = path.join(memoryDir, 'verification-events.jsonl');
+    const validEvent = JSON.stringify({
+      schemaVersion: 1,
+      eventId: 'ev-1',
+      attemptId: 'att-1',
+      recordId: 'rec_bridge_test',
+      repositoryId: 'test-repo',
+      outcome: 'passed',
+      method: 'human_confirmed',
+      recordedAt: new Date().toISOString(),
+    });
+    // Include duplicate attemptId and a malformed line to confirm resilient parsing
+    fs.writeFileSync(eventsPath, `${validEvent}\n${validEvent}\n{CORRUPT_LINE\n`, 'utf8');
+    const beforeContent = fs.readFileSync(eventsPath, 'utf8');
+
+    const storage = new BridgeStorage(memoryDir);
+    const stats = storage.getStats('test-repo');
+    expect(stats.totalRecords).toBe(1);
+    expect(stats.verifiedCount).toBe(1);
+    expect(stats.successRate).toBeGreaterThan(0);
+
+    const list = storage.getRecords({ repositoryId: 'test-repo' });
+    expect(list.length).toBe(1);
+    expect(list[0]?.verificationStatus).toBe('verified_success');
+    expect(list[0]?.wilsonLowerBound).toBeGreaterThan(0);
+
+    const detail = storage.getRecordById('rec_bridge_test') as {
+      commandFamily: string;
+      verificationStatus: string;
+      wilsonLowerBound: number | null;
+      provenance: { commit: string; branch: string; author: string };
+    } | null;
+    expect(detail).not.toBeNull();
+    expect(detail?.commandFamily).toBe('npm');
+    expect(detail?.verificationStatus).toBe('verified_success');
+    expect(detail?.wilsonLowerBound).toBeGreaterThan(0);
+    expect(detail?.provenance.commit).toBe('deadbeef123456');
+    expect(detail?.provenance.branch).toBe('feat/fix');
+    expect(detail?.provenance.author).toBe('alice');
+
+    // Confirm verification-events.jsonl was not mutated
+    expect(fs.readFileSync(eventsPath, 'utf8')).toBe(beforeContent);
+    storage.close();
+  });
 });

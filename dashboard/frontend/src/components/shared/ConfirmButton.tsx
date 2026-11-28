@@ -31,7 +31,12 @@ export function ConfirmButton({
     await onConfirm();
   };
 
-  const buttonClass = variant === 'success' ? 'btn btn-success' : variant === 'primary' ? 'btn btn-primary' : 'btn btn-danger';
+  const buttonClass =
+    variant === 'success'
+      ? 'btn btn-success'
+      : variant === 'primary'
+        ? 'btn btn-primary'
+        : 'btn btn-danger';
 
   return (
     <button

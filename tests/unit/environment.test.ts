@@ -66,11 +66,18 @@ describe('inferPackageManagerFromCommand', () => {
 
 describe('inferPackageManagerFromPackageJson', () => {
   let tmpDir: string;
-  beforeEach(() => { tmpDir = makeTmpDir(); });
-  afterEach(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tmpDir = makeTmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
 
   it('reads corepack packageManager field (yarn)', () => {
-    fs.writeFileSync(path.join(tmpDir, 'package.json'), JSON.stringify({ packageManager: 'yarn@3.6.0' }));
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ packageManager: 'yarn@3.6.0' }),
+    );
     expect(inferPackageManagerFromPackageJson(tmpDir)).toBe('yarn');
   });
 
@@ -85,7 +92,10 @@ describe('inferPackageManagerFromPackageJson', () => {
   });
 
   it('returns null for unknown package manager in field', () => {
-    fs.writeFileSync(path.join(tmpDir, 'package.json'), JSON.stringify({ packageManager: 'rush@5.0.0' }));
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ packageManager: 'rush@5.0.0' }),
+    );
     expect(inferPackageManagerFromPackageJson(tmpDir)).toBeNull();
   });
 
@@ -103,8 +113,12 @@ describe('inferPackageManagerFromPackageJson', () => {
 
 describe('inferPackageManagerFromLockfiles', () => {
   let tmpDir: string;
-  beforeEach(() => { tmpDir = makeTmpDir(); });
-  afterEach(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tmpDir = makeTmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
 
   it('detects npm from package-lock.json', () => {
     fs.writeFileSync(path.join(tmpDir, 'package-lock.json'), '{}');
@@ -158,8 +172,12 @@ describe('inferPackageManagerFromLockfiles', () => {
 
 describe('getLockfileHashes', () => {
   let tmpDir: string;
-  beforeEach(() => { tmpDir = makeTmpDir(); });
-  afterEach(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tmpDir = makeTmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
 
   it('returns sha256 hex for existing lockfiles', () => {
     fs.writeFileSync(path.join(tmpDir, 'package-lock.json'), '{}');
@@ -186,13 +204,20 @@ describe('getLockfileHashes', () => {
 
 describe('buildEnvironmentSnapshot — priority', () => {
   let tmpDir: string;
-  beforeEach(() => { tmpDir = makeTmpDir(); });
-  afterEach(() => { fs.rmSync(tmpDir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tmpDir = makeTmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
 
   it('command beats package.json field and lockfile', () => {
     // npm lockfile + yarn packageManager field, but command is pnpm
     fs.writeFileSync(path.join(tmpDir, 'package-lock.json'), '{}');
-    fs.writeFileSync(path.join(tmpDir, 'package.json'), JSON.stringify({ packageManager: 'yarn@3.0.0' }));
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ packageManager: 'yarn@3.0.0' }),
+    );
     const snap = buildEnvironmentSnapshot('pnpm test', tmpDir);
     expect(snap.packageManager).toBe('pnpm');
     expect(snap.packageManagerSource).toBe('command');
@@ -200,7 +225,10 @@ describe('buildEnvironmentSnapshot — priority', () => {
 
   it('package.json field beats lockfile when no command match', () => {
     fs.writeFileSync(path.join(tmpDir, 'package-lock.json'), '{}');
-    fs.writeFileSync(path.join(tmpDir, 'package.json'), JSON.stringify({ packageManager: 'yarn@3.0.0' }));
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ packageManager: 'yarn@3.0.0' }),
+    );
     const snap = buildEnvironmentSnapshot('vitest run', tmpDir);
     // vitest is not in COMMAND_PM_MAP, so falls through to package.json
     expect(snap.packageManager).toBe('yarn');

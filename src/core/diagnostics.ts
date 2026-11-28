@@ -16,11 +16,40 @@
 // ─── Boilerplate to downweight ────────────────────────────────────────────────
 
 const BOILERPLATE_TOKENS = new Set([
-  'npm', 'npx', 'yarn', 'pnpm', 'bun', 'node', 'run', 'script',
-  'error', 'err', 'warn', 'warning', 'info', 'debug',
-  'failed', 'failure', 'fail', 'exit', 'exited', 'code',
-  'at', 'in', 'of', 'the', 'and', 'with', 'from', 'to', 'for',
-  'running', 'run', 'stderr', 'stdout', 'process',
+  'npm',
+  'npx',
+  'yarn',
+  'pnpm',
+  'bun',
+  'node',
+  'run',
+  'script',
+  'error',
+  'err',
+  'warn',
+  'warning',
+  'info',
+  'debug',
+  'failed',
+  'failure',
+  'fail',
+  'exit',
+  'exited',
+  'code',
+  'at',
+  'in',
+  'of',
+  'the',
+  'and',
+  'with',
+  'from',
+  'to',
+  'for',
+  'running',
+  'run',
+  'stderr',
+  'stdout',
+  'process',
 ]);
 
 // ─── Error-code / exception patterns ─────────────────────────────────────────
@@ -37,17 +66,12 @@ const CODE_KV_RE = /code[=:\s]+['"]?([A-Z_]{3,})['"]?/g;
 /** Exception class names: TypeError, ReferenceError, ModuleNotFoundError, ImportError … */
 const EXCEPTION_RE = /\b[A-Z][a-zA-Z]*(?:Error|Exception|Warning|Fault|Panic)\b/g;
 
-/** Compiler/test identifiers: vitest:, jest:, cargo:, pytest::, make[N]: */
-const TOOL_ID_RE = /\b(?:vitest|jest|mocha|pytest|cargo|rustc|tsc|make|gradle|maven|bazel|go)\b/gi;
-
 /** File paths (Windows or POSIX) ending with a known code extension */
-const FILE_PATH_RE = /(?:[./\\][\w./\\-]*\.(?:ts|tsx|js|jsx|mjs|cjs|py|rs|go|java|kt|rb|sh|toml|json|yaml|yml|lock|txt))/gi;
+const FILE_PATH_RE =
+  /(?:[./\\][\w./\\-]*\.(?:ts|tsx|js|jsx|mjs|cjs|py|rs|go|java|kt|rb|sh|toml|json|yaml|yml|lock|txt))/gi;
 
 /** Package names with version constraints: lodash@4.17, some-pkg@^2 */
 const PKG_VERSION_RE = /\b([\w-]{2,}@[\^~>=<]?\d[\w.,-]*)/g;
-
-/** HTTP status codes that appear in error context */
-const HTTP_STATUS_RE = /\b(?:4[0-9]{2}|5[0-9]{2})\b/g;
 
 // ─── Extracted signal ─────────────────────────────────────────────────────────
 
@@ -75,7 +99,7 @@ const REGION_TOKENS = 6; // tokens from start, middle, end
  * The output is deterministic and bounded — safe to pass directly into FTS5.
  */
 export function extractDiagnosticSignals(normalizedOutput: string): DiagnosticSignals {
-  const text = normalizedOutput ?? '';
+  const text = normalizedOutput;
 
   // --- Very-high priority: regex-based signal extraction ---
 
@@ -93,9 +117,10 @@ export function extractDiagnosticSignals(normalizedOutput: string): DiagnosticSi
       .filter((p) => p.length > 3),
   ).slice(0, 5);
 
-  const packageVersions: string[] = dedup(
-    extractCaptureGroups(text, PKG_VERSION_RE, 1),
-  ).slice(0, 5);
+  const packageVersions: string[] = dedup(extractCaptureGroups(text, PKG_VERSION_RE, 1)).slice(
+    0,
+    5,
+  );
 
   // --- High priority: region-sampled tokens (start + middle + end) ---
 
@@ -109,9 +134,7 @@ export function extractDiagnosticSignals(normalizedOutput: string): DiagnosticSi
   // --- Technical tokens: not in boilerplate, not numeric ---
 
   const technicalTokens: string[] = dedup(
-    regionTokens.filter(
-      (t) => !BOILERPLATE_TOKENS.has(t.toLowerCase()) && t.length >= 3,
-    ),
+    regionTokens.filter((t) => !BOILERPLATE_TOKENS.has(t.toLowerCase()) && t.length >= 3),
   ).slice(0, 10);
 
   // --- Build bounded FTS query token list (high-signal first) ---
@@ -160,7 +183,10 @@ function extractCaptureGroups(text: string, re: RegExp, group: number): string[]
 function sampleRegions(tokens: string[], n: number): string[] {
   if (tokens.length <= n * 3) return tokens;
   const start = tokens.slice(0, n);
-  const mid = tokens.slice(Math.floor(tokens.length / 2) - Math.floor(n / 2), Math.floor(tokens.length / 2) + Math.ceil(n / 2));
+  const mid = tokens.slice(
+    Math.floor(tokens.length / 2) - Math.floor(n / 2),
+    Math.floor(tokens.length / 2) + Math.ceil(n / 2),
+  );
   const end = tokens.slice(tokens.length - n);
   return [...start, ...mid, ...end];
 }

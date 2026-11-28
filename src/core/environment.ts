@@ -76,7 +76,7 @@ const COMMAND_PM_MAP: Record<string, PackageManager> = {
   poetry: 'poetry',
   pip: 'pip',
   pip3: 'pip',
-  python: 'pip',   // approximation for python-based tools
+  python: 'pip', // approximation for python-based tools
   python3: 'pip',
   pytest: 'pip',
 };
@@ -123,7 +123,9 @@ export function inferPackageManagerFromPackageJson(workspaceRoot: string): Packa
  * Returns 'ambiguous' when multiple conflicting lockfiles exist.
  * Returns null if no lockfiles found.
  */
-export function inferPackageManagerFromLockfiles(workspaceRoot: string): PackageManager | 'ambiguous' | null {
+export function inferPackageManagerFromLockfiles(
+  workspaceRoot: string,
+): PackageManager | 'ambiguous' | null {
   const detected = new Set<PackageManager>();
   for (const [file, pm] of Object.entries(LOCKFILE_PM_MAP)) {
     if (fs.existsSync(path.join(workspaceRoot, file))) {
@@ -131,15 +133,17 @@ export function inferPackageManagerFromLockfiles(workspaceRoot: string): Package
     }
   }
   if (detected.size === 0) return null;
-  if (detected.size === 1) return [...detected][0]!;
+  const detectedList = [...detected];
+  const first = detectedList[0];
+  if (detected.size === 1 && first !== undefined) return first;
   // Multiple different package managers detected — ambiguous
   // However, npm+pip co-existing is not ambiguous for JS commands
   // Strip pip from the ambiguity check since it's a different ecosystem
-  const jsManagers = [...detected].filter((pm) => ['npm', 'pnpm', 'yarn', 'bun'].includes(pm));
-  if (jsManagers.length === 1) return jsManagers[0]!;
+  const jsManagers = detectedList.filter((pm) => ['npm', 'pnpm', 'yarn', 'bun'].includes(pm));
+  if (jsManagers.length === 1 && jsManagers[0] !== undefined) return jsManagers[0];
   if (jsManagers.length > 1) return 'ambiguous';
   // Only non-JS managers remain
-  if (detected.size === 1) return [...detected][0]!;
+  if (detected.size === 1 && first !== undefined) return first;
   return 'ambiguous';
 }
 

@@ -32,9 +32,13 @@ describe('Documentation — no forbidden language', () => {
     // Allow negation contexts like "never 'safe to execute'" or "phrases permanently removed"
     const matches = [...content.matchAll(/safe\s+to\s+execute/gi)];
     for (const match of matches) {
-      const context = content.slice(Math.max(0, match.index! - 100), match.index! + 100);
-      const hasNegation = /\bnever\b|\bnot\b|\bdoes not\b|\bpermanently removed\b|\bno\b|\bwithout\b/i.test(context);
-      expect(hasNegation, `"safe to execute" used without negation in ${file}: ...${context}...`).toBe(true);
+      const context = content.slice(Math.max(0, match.index - 100), match.index + 100);
+      const hasNegation =
+        /\bnever\b|\bnot\b|\bdoes not\b|\bpermanently removed\b|\bno\b|\bwithout\b/i.test(context);
+      expect(
+        hasNegation,
+        `"safe to execute" used without negation in ${file}: ...${context}...`,
+      ).toBe(true);
     }
   });
 
@@ -44,10 +48,15 @@ describe('Documentation — no forbidden language', () => {
     // We test that it does not appear in a positive claim
     const sandboxedMatches = [...content.matchAll(/sandboxed/gi)];
     for (const match of sandboxedMatches) {
-      const context = content.slice(Math.max(0, match.index! - 160), match.index! + 160);
+      const context = content.slice(Math.max(0, match.index - 160), match.index + 160);
       // If "sandboxed" appears, it must be in a negation context
-      const hasNegation = /\bnot\b|\bnever\b|\bdoes not\b|\bno\b|\bcannot\b|\bpermanently removed\b|\bremoved from\b|\bforbidden\b/i.test(context);
-      expect(hasNegation, `"sandboxed" used without negation in ${file}: ...${context}...`).toBe(true);
+      const hasNegation =
+        /\bnot\b|\bnever\b|\bdoes not\b|\bno\b|\bcannot\b|\bpermanently removed\b|\bremoved from\b|\bforbidden\b/i.test(
+          context,
+        );
+      expect(hasNegation, `"sandboxed" used without negation in ${file}: ...${context}...`).toBe(
+        true,
+      );
     }
   });
 
@@ -76,13 +85,16 @@ describe('Documentation — no forbidden language', () => {
   it('README — policy assessment row does not positively claim sandboxing', () => {
     const content = readDoc('README.md');
     // Find the policy assessment row
-    const match = content.match(/Policy assessment.*\n?/i);
+    const match = /Policy assessment.*\n?/i.exec(content);
     expect(match).not.toBeNull();
     if (match) {
       // The row may mention "sandboxed" to deny it, but must not positively claim it
       const row = match[0];
       // A positive claim would be "sandboxes", "is sandboxed", etc. — not "no 'sandboxed' claims"
-      const positiveSandboxClaim = /(?<!\bno\b\s+['"]?)\bsandbox(?:ed|ing|es)(?!\s*['"]?\s+claims?)/i.test(row.replace(/no ['"]sandboxed['"]/, ''));
+      const positiveSandboxClaim =
+        /(?<!\bno\b\s+['"]?)\bsandbox(?:ed|ing|es)(?!\s*['"]?\s+claims?)/i.test(
+          row.replace(/no ['"]sandboxed['"]/, ''),
+        );
       expect(positiveSandboxClaim).toBe(false);
     }
   });

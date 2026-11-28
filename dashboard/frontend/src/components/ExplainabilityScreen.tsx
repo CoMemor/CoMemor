@@ -7,7 +7,16 @@ interface Props {
 
 function IconBarChart(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="18" y1="20" x2="18" y2="10" />
       <line x1="12" y1="20" x2="12" y2="4" />
       <line x1="6" y1="20" x2="6" y2="14" />
@@ -15,27 +24,41 @@ function IconBarChart(): ReactNode {
   );
 }
 
+function FactorChip({ label, ok }: { label: string; ok: boolean }): ReactNode {
+  return (
+    <div>
+      {label}: <span className={ok ? 'factor-pass' : 'factor-fail'}>{ok ? 'Pass' : 'Fail'}</span>
+    </div>
+  );
+}
+
 export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNode {
   const [data, setData] = useState<ExplainabilityData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [loadFailed, setLoadFailed] = useState<boolean>(false);
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadFailed(false);
     try {
       const res = await onFetchExplainability();
       if (res) setData(res);
+      else setLoadFailed(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const threshold = data?.threshold ?? 0.7;
+  useEffect(() => {
+    void loadData();
+  }, []);
 
-  if (isLoading) {
+  const threshold = data?.threshold ?? 0.7;
+  const candidates = data?.candidates ?? [];
+  const acceptedCount = candidates.filter((c) => c.trustScore >= threshold).length;
+  const rejectedCount = candidates.length - acceptedCount;
+
+  if (isLoading && !data) {
     return (
       <div>
         <div className="screen-header">
@@ -43,8 +66,14 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
             <span className="explainability-loading-spinner" aria-hidden="true" />
             <span>Loading retrieval explanation…</span>
           </div>
-          <div className="skeleton-box" style={{ width: '280px', height: '28px', marginBottom: '8px' }} />
-          <div className="skeleton-box" style={{ width: '520px', height: '16px' }} />
+          <div
+            className="skeleton-box"
+            style={{ width: '280px', height: '28px', marginBottom: '8px' }}
+          />
+          <div
+            className="skeleton-box"
+            style={{ width: '520px', maxWidth: '100%', height: '16px' }}
+          />
         </div>
         <div className="panel" style={{ height: '120px' }}>
           <div className="skeleton-box" style={{ height: '100%' }} />
@@ -63,55 +92,98 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
           <div>
             <h1 className="screen-title">Retrieval Explainability</h1>
             <p className="screen-subtitle">
-              Transparent multi-factor ranking, fuzzy fallback evaluation, and stale-penalty scoring against the acceptance threshold.
+              Transparent multi-factor ranking, fuzzy fallback evaluation, and stale-penalty scoring
+              against the acceptance threshold.
             </p>
           </div>
-          <div className="badge gray" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
-            Deterministic Scoring Engine
+          <div className="screen-actions">
+            <span
+              className="badge gray"
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+            >
+              Deterministic Scoring Engine
+            </span>
+            <button
+              className="btn btn-outline"
+              onClick={() => void loadData()}
+              disabled={isLoading}
+              aria-label="Re-run retrieval explanation"
+            >
+              {isLoading ? 'Refreshing…' : 'Refresh'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Diagnostic Query Banner */}
-      <div
-        className="panel"
-        style={{
-          background: 'var(--bg-subtle)',
-          borderColor: 'var(--border-subtle)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      {loadFailed && (
+        <div className="error-banner" role="alert">
           <div>
-            <div
-              style={{
-                fontSize: '0.72rem',
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                fontWeight: 700,
-                marginBottom: '0.25rem',
-              }}
-            >
+            <strong>Could not load the explanation.</strong> The bridge did not return
+            explainability data
+            {data ? ' — showing the last successful result.' : '.'}
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={() => void loadData()}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Diagnostic Query Banner */}
+      <div className="panel" style={{ background: 'var(--bg-subtle)' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div className="mini-label" style={{ marginBottom: '0.25rem' }}>
               Active Diagnostic Evaluation Query
             </div>
-            <div className="mono" style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {data?.query ?? 'npm run build'}
+            <div
+              className="mono"
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              {data?.query ?? '—'}
             </div>
             <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
               Normalized compiler & build script exit failure
             </div>
           </div>
 
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Retrieval Acceptance Threshold (τ)
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="mini-stats" style={{ marginBottom: 0 }}>
+              <div className="mini-stat success">
+                <span>Accepted</span>
+                <strong>{acceptedCount}</strong>
+              </div>
+              <div className={`mini-stat ${rejectedCount > 0 ? 'danger' : ''}`}>
+                <span>Rejected</span>
+                <strong>{rejectedCount}</strong>
+              </div>
             </div>
-            <div className="mono" style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              {(threshold * 100).toFixed(0)}% (0.70)
+            <div style={{ textAlign: 'right' }}>
+              <div className="mini-label" style={{ marginBottom: '0.1rem' }}>
+                Acceptance Threshold (τ)
+              </div>
+              <div
+                className="mono"
+                style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)' }}
+              >
+                {(threshold * 100).toFixed(0)}% ({threshold.toFixed(2)})
+              </div>
+              <span className="badge gray" style={{ fontSize: '0.68rem' }}>
+                CONSERVATIVE BOUND
+              </span>
             </div>
-            <span className="badge gray" style={{ fontSize: '0.68rem' }}>
-              CONSERVATIVE BOUND
-            </span>
           </div>
         </div>
       </div>
@@ -125,14 +197,24 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
           <span className="badge gray">Levenshtein + Wilson + Provenance</span>
         </div>
 
-        <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.35rem' }}>
-          Composite score formula: <code className="mono" style={{ color: 'var(--text-primary)' }}>S = Similarity × ProvenanceDecay(0.8x) × Quarantine(0.5x) × WilsonBound</code>.
-          Candidates below τ = 0.70 are decisively rejected from prompt injection.
+        <p
+          style={{
+            fontSize: '0.82rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '1.1rem',
+            lineHeight: 1.55,
+          }}
+        >
+          Composite score formula:{' '}
+          <code className="mono" style={{ color: 'var(--text-primary)' }}>
+            S = Similarity × ProvenanceDecay(0.8x) × Quarantine(0.5x) × WilsonBound
+          </code>
+          . Candidates below τ = {threshold.toFixed(2)} are decisively rejected from prompt
+          injection.
         </p>
 
-        {/* Visual Threshold Bars */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-          {!data || data.candidates.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          {candidates.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">
                 <IconBarChart />
@@ -143,49 +225,52 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
               </p>
             </div>
           ) : (
-            data.candidates.map((cand, idx) => {
-              const scorePercent = Math.min(100, Math.round(cand.trustScore * 100));
+            candidates.map((cand, idx) => {
+              const scorePercent = Math.min(100, Math.max(0, Math.round(cand.trustScore * 100)));
               const passes = cand.trustScore >= threshold;
 
               return (
                 <div
-                  key={idx}
-                  style={{
-                    background: 'var(--bg-subtle)',
-                    padding: '1.15rem 1.25rem',
-                    borderRadius: '6px',
-                    border: `1px solid ${passes ? 'var(--border-subtle)' : 'var(--status-danger-bd)'}`,
-                  }}
+                  key={`${cand.id}-${idx}`}
+                  className={`candidate-card ${passes ? '' : 'rejected'}`}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '0.65rem',
-                      flexWrap: 'wrap',
-                      gap: '0.5rem',
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.25rem' }}>
-                        <span className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <div className="candidate-head">
+                    <div style={{ minWidth: 0 }}>
+                      <div className="candidate-badges">
+                        <span
+                          className="mono"
+                          style={{ fontWeight: 700, color: 'var(--text-primary)' }}
+                        >
                           {cand.id}
                         </span>
-                        <span className={`badge ${cand.matchType === 'exact' ? 'emerald' : 'gray'}`}>
+                        <span
+                          className={`badge ${cand.matchType === 'exact' ? 'emerald' : 'gray'}`}
+                        >
                           {cand.matchType.toUpperCase()} MATCH
                         </span>
-                        {cand.isQuarantined && <span className="badge rose">QUARANTINED (0.5x PENALTY)</span>}
-                        {cand.isStale && <span className="badge gray">STALE (LOCKFILE MISMATCH)</span>}
+                        {cand.isQuarantined && (
+                          <span className="badge rose">QUARANTINED (0.5x PENALTY)</span>
+                        )}
+                        {cand.isStale && (
+                          <span className="badge gray">STALE (LOCKFILE MISMATCH)</span>
+                        )}
                       </div>
-                      <code style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>{cand.command}</code>
+                      <code
+                        style={{
+                          fontSize: '0.8rem',
+                          color: 'var(--text-primary)',
+                          overflowWrap: 'anywhere',
+                        }}
+                      >
+                        {cand.command}
+                      </code>
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
                       <div
                         className="mono"
                         style={{
-                          fontSize: '1.25rem',
+                          fontSize: '1.2rem',
                           fontWeight: 700,
                           color: passes ? 'var(--status-success)' : 'var(--status-danger)',
                         }}
@@ -201,7 +286,7 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
                     </div>
                   </div>
 
-                  {/* High-Precision Score Bar with Absolute Threshold Marker */}
+                  {/* Score bar with absolute threshold marker */}
                   <div className="explain-bar-track">
                     <div
                       className="explain-bar-fill"
@@ -210,7 +295,6 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
                         background: passes ? 'var(--status-success)' : 'var(--status-danger)',
                       }}
                     />
-                    {/* Visual Threshold indicator line */}
                     <div
                       className="explain-threshold-line"
                       style={{ left: `${threshold * 100}%` }}
@@ -218,61 +302,29 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
                     />
                   </div>
 
-                  {/* Multi-Factor Score Chips & Filter Checklist */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      gap: '0.85rem',
-                      marginTop: '0.65rem',
-                      fontSize: '0.76rem',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
+                  {/* Multi-factor chips & filter checklist */}
+                  <div className="candidate-factors">
                     <div>
                       Raw Similarity:{' '}
                       <strong className="mono" style={{ color: 'var(--text-primary)' }}>
                         {(cand.similarityScore * 100).toFixed(1)}%
                       </strong>
                     </div>
-
-                    <div>
-                      Repo Match:{' '}
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: cand.passedFilters.repository ? 'var(--status-success)' : 'var(--status-danger)',
-                        }}
-                      >
-                        {cand.passedFilters.repository ? 'Pass' : 'Fail'}
-                      </span>
-                    </div>
-
-                    <div>
-                      Family Match:{' '}
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: cand.passedFilters.commandFamily ? 'var(--status-success)' : 'var(--status-danger)',
-                        }}
-                      >
-                        {cand.passedFilters.commandFamily ? 'Pass' : 'Fail'}
-                      </span>
-                    </div>
-
-                    <div>
-                      Exit Code:{' '}
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: cand.passedFilters.exitCode ? 'var(--status-success)' : 'var(--status-danger)',
-                        }}
-                      >
-                        {cand.passedFilters.exitCode ? 'Pass' : 'Fail'}
-                      </span>
-                    </div>
+                    <FactorChip label="Repo Match" ok={cand.passedFilters.repository} />
+                    <FactorChip label="Family Match" ok={cand.passedFilters.commandFamily} />
+                    <FactorChip label="Exit Code" ok={cand.passedFilters.exitCode} />
                   </div>
+
+                  {cand.staleReasons.length > 0 && (
+                    <div className="candidate-factors" style={{ marginTop: '0.35rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Stale reasons:</span>
+                      {cand.staleReasons.map((reason, i) => (
+                        <span key={i} className="badge gray">
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -281,25 +333,12 @@ export function ExplainabilityScreen({ onFetchExplainability }: Props): ReactNod
       </div>
 
       {/* Defensible Safety Invariant Callout */}
-      <div
-        className="panel"
-        style={{
-          borderLeft: '4px solid var(--border-strong)',
-          background: 'var(--bg-subtle)',
-        }}
-      >
-        <h3
-          style={{
-            fontSize: '0.92rem',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            marginBottom: '0.25rem',
-          }}
-        >
-          Defensible Safety Invariant: No Silent Promotion
-        </h3>
-        <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-          Fuzzy matches are never silently promoted to verified fixes. Every retrieved record surfaces its exact matchType, raw similarity, provenance decay factor, and quarantine containment status directly into the prompt sanitization envelope.
+      <div className="callout">
+        <h3>Defensible Safety Invariant: No Silent Promotion</h3>
+        <p>
+          Fuzzy matches are never silently promoted to verified fixes. Every retrieved record
+          surfaces its exact matchType, raw similarity, provenance decay factor, and quarantine
+          containment status directly into the prompt sanitization envelope.
         </p>
       </div>
     </div>

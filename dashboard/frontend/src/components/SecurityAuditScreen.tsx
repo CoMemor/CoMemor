@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode, type KeyboardEvent } from 'react';
 
 interface AuditData {
   redactionLayers: Array<{
@@ -33,9 +33,29 @@ interface Props {
 
 /* ── SVG Icons (Strictly Zero Emojis) ────────────────────────────── */
 
+const iconProps = {
+  width: 28,
+  height: 28,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.75,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+};
+
 function IconLightning(): ReactNode {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   );
@@ -43,7 +63,7 @@ function IconLightning(): ReactNode {
 
 function IconTerminal(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...iconProps}>
       <polyline points="4 17 10 11 4 5" />
       <line x1="12" y1="19" x2="20" y2="19" />
     </svg>
@@ -52,7 +72,7 @@ function IconTerminal(): ReactNode {
 
 function IconKey(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...iconProps}>
       <path d="M21 2l-2 2m-1.5 1.5L16 7l-2 2m-2-2l2-2 1.5-1.5M7 13a5 5 0 1 0 7 7 5 5 0 0 0-7-7z" />
     </svg>
   );
@@ -60,7 +80,7 @@ function IconKey(): ReactNode {
 
 function IconWaveform(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...iconProps}>
       <path d="M2 12h3l3-9 4 18 3-9h3l2-3 2 3h2" />
     </svg>
   );
@@ -68,7 +88,7 @@ function IconWaveform(): ReactNode {
 
 function IconRadar(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...iconProps}>
       <circle cx="12" cy="12" r="10" />
       <path d="M12 2a10 10 0 0 1 10 10" />
       <path d="M12 12l5-5" />
@@ -79,7 +99,7 @@ function IconRadar(): ReactNode {
 
 function IconDatabase(): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...iconProps}>
       <ellipse cx="12" cy="5" rx="9" ry="3" />
       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
@@ -87,9 +107,18 @@ function IconDatabase(): ReactNode {
   );
 }
 
-function IconShield(): ReactNode {
+function IconShield({ size = 22 }: { size?: number }): ReactNode {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
@@ -97,7 +126,15 @@ function IconShield(): ReactNode {
 
 function IconCheck(): ReactNode {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
       <polyline points="2 6 5 9 10 3" />
     </svg>
   );
@@ -120,6 +157,8 @@ interface StageDetail {
   description: string;
   rulesHeading: string;
   rules: RuleItem[];
+  icon: ReactNode;
+  ariaLabel: string;
 }
 
 const STAGES: StageDetail[] = [
@@ -140,6 +179,8 @@ const STAGES: StageDetail[] = [
       { name: 'Pre-Hash Fingerprint Gate', pattern: 'sha256:pre-write' },
       { name: 'Synchronous Pipeline Execution', pattern: 'blocking RPC' },
     ],
+    icon: <IconTerminal />,
+    ariaLabel: 'Inspect Raw Ingress node',
   },
   {
     id: 'stage-2',
@@ -160,6 +201,8 @@ const STAGES: StageDetail[] = [
       { name: 'PEM Private Cryptographic Keys', pattern: 'BEGIN PRIVATE KEY' },
       { name: 'Database Connection URIs', pattern: 'protocol://user:pass' },
     ],
+    icon: <IconKey />,
+    ariaLabel: 'Inspect Pattern Redactor node',
   },
   {
     id: 'stage-3',
@@ -178,6 +221,8 @@ const STAGES: StageDetail[] = [
       { name: 'Base64 / Hex Hash Sanitization', pattern: 'radix-aware' },
       { name: 'Pre-Persistence Substitution', pattern: '[REDACTED_ENTROPY]' },
     ],
+    icon: <IconWaveform />,
+    ariaLabel: 'Inspect Entropy Gate node',
   },
   {
     id: 'stage-4',
@@ -198,6 +243,8 @@ const STAGES: StageDetail[] = [
       { name: 'Unicode Homoglyph Spoofing', pattern: 'Cyrillic confusables' },
       { name: 'Imperative Verb Density Spike', pattern: '> 8% verbs (20+ words)' },
     ],
+    icon: <IconRadar />,
+    ariaLabel: 'Inspect Poisoning Defense node',
   },
   {
     id: 'stage-5',
@@ -217,35 +264,46 @@ const STAGES: StageDetail[] = [
       { name: 'Quarantine Route: Retrieval Penalty', pattern: '0.5x composite weight' },
       { name: 'Quarantine Route: Tamper-Evident Audit Log', pattern: 'forensic telemetry' },
     ],
+    icon: <IconDatabase />,
+    ariaLabel: 'Inspect Storage and Gate destination',
   },
 ];
 
 export function SecurityAuditScreen({ onFetchAudit }: Props): ReactNode {
   const [data, setData] = useState<AuditData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadFailed, setLoadFailed] = useState<boolean>(false);
   const [selectedStageId, setSelectedStageId] = useState<string>('stage-2');
   const [filterQuery, setFilterQuery] = useState<string>('');
 
-  useEffect(() => {
-    loadAudit();
-  }, []);
-
   const loadAudit = async () => {
     setIsLoading(true);
+    setLoadFailed(false);
     try {
       const res = await onFetchAudit();
       if (res) setData(res);
+      else setLoadFailed(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  useEffect(() => {
+    void loadAudit();
+  }, []);
+
+  if (isLoading && !data) {
     return (
       <div>
         <div className="screen-header">
-          <div className="skeleton-box" style={{ width: '320px', height: '28px', marginBottom: '8px' }} />
-          <div className="skeleton-box" style={{ width: '520px', height: '16px' }} />
+          <div
+            className="skeleton-box"
+            style={{ width: '320px', height: '28px', marginBottom: '8px' }}
+          />
+          <div
+            className="skeleton-box"
+            style={{ width: '520px', maxWidth: '100%', height: '16px' }}
+          />
         </div>
         <div className="panel" style={{ height: '240px', marginBottom: '16px' }}>
           <div className="skeleton-box" style={{ height: '100%' }} />
@@ -258,12 +316,27 @@ export function SecurityAuditScreen({ onFetchAudit }: Props): ReactNode {
   }
 
   const currentStage = STAGES.find((s) => s.id === selectedStageId) ?? STAGES[1];
-  const quarantinedRecords = data?.poisoningAudit.quarantinedRecords ?? [];
+  const quarantinedRecords = data?.poisoningAudit?.quarantinedRecords ?? [];
+  const totalInspected = data?.poisoningAudit?.totalInspected ?? 0;
+  const quarantinedCount = data?.poisoningAudit?.quarantinedCount ?? quarantinedRecords.length;
+  const detectors = data?.poisoningAudit?.detectors ?? [];
+  const redactionLayers = data?.redactionLayers ?? [];
   const filteredRecords = quarantinedRecords.filter((r) => {
     if (!filterQuery) return true;
     const q = filterQuery.toLowerCase();
-    return r.id.toLowerCase().includes(q) || r.command.toLowerCase().includes(q) || r.flagReason.toLowerCase().includes(q);
+    return (
+      r.id.toLowerCase().includes(q) ||
+      r.command.toLowerCase().includes(q) ||
+      r.flagReason.toLowerCase().includes(q)
+    );
   });
+
+  const nodeKeyDown = (id: string) => (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedStageId(id);
+    }
+  };
 
   return (
     <div>
@@ -272,23 +345,197 @@ export function SecurityAuditScreen({ onFetchAudit }: Props): ReactNode {
           <div>
             <h1 className="screen-title">Security & Redaction Architecture</h1>
             <p className="screen-subtitle">
-              Verification of multi-layer secret redaction (deterministic regex + Shannon entropy) and persisted-retrieval poisoning heuristic defenses.
+              Verification of multi-layer secret redaction (deterministic regex + Shannon entropy)
+              and persisted-retrieval poisoning heuristic defenses.
             </p>
           </div>
-          <div className="badge emerald" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
-            <IconCheck /> Zero Plaintext Leak Invariant Active
+          <div className="screen-actions">
+            <span
+              className="badge emerald"
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+            >
+              <IconCheck /> Zero Plaintext Leak Invariant Active
+            </span>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => void loadAudit()}
+              disabled={isLoading}
+              aria-label="Refresh security audit"
+            >
+              {isLoading ? 'Refreshing…' : 'Refresh'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ── N8N WORKFLOW ARCHITECTURE CANVAS ── */}
+      {loadFailed && (
+        <div className="error-banner" role="alert">
+          <div>
+            <strong>Could not load audit data.</strong> The bridge did not return a security audit
+            {data ? ' — showing the last successful result.' : '.'}
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={() => void loadAudit()}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ── Key numbers first ── */}
+      <div className="stat-grid">
+        <div className={`stat-card ${quarantinedCount > 0 ? 'tone-danger' : 'tone-success'}`}>
+          <div className="stat-label">Quarantined Records</div>
+          <div
+            className="stat-value"
+            style={{
+              color: quarantinedCount > 0 ? 'var(--status-danger)' : 'var(--status-success)',
+            }}
+          >
+            {quarantinedCount}
+          </div>
+          <div className="stat-subtext">
+            {quarantinedCount > 0
+              ? 'Excluded from default prompt retrieval.'
+              : 'No adversarial memories detected.'}
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Records Inspected</div>
+          <div className="stat-value">{totalInspected}</div>
+          <div className="stat-subtext">Passed through the poisoning heuristics engine.</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Active Detectors</div>
+          <div className="stat-value">{detectors.length > 0 ? detectors.length : 7}</div>
+          <div className="stat-subtext">
+            {detectors.length > 0
+              ? `${detectors.filter((d) => d.status === 'active').length} reporting active.`
+              : 'Heuristic layers guarding retrieval.'}
+          </div>
+        </div>
+      </div>
+
+      {/* ── QUARANTINED RECORDS CATALOG TABLE ── */}
+      <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="audit-table-header">
+          <div>
+            <h2 className="panel-title" style={{ display: 'inline' }}>
+              Quarantined Records Catalog
+            </h2>
+            <span
+              style={{ marginLeft: '0.65rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}
+            >
+              ({quarantinedRecords.length} {quarantinedRecords.length === 1 ? 'record' : 'records'}{' '}
+              quarantined)
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="input"
+              style={{ width: '240px', maxWidth: '100%' }}
+              placeholder="Filter quarantined records..."
+              aria-label="Filter quarantined records"
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+            />
+            <span className="badge rose">Excluded from Default Prompt Retrieval</span>
+          </div>
+        </div>
+
+        <div className="table-container table-scroll" style={{ maxHeight: '420px' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Command</th>
+                <th>Detection Reason</th>
+                <th>Quarantined At</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: '2.5rem 1.5rem' }}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">
+                        <IconShield />
+                      </div>
+                      <h2 className="empty-state-title">Quarantine Log Clean</h2>
+                      <p className="empty-state-desc">
+                        {quarantinedRecords.length === 0
+                          ? 'No records are currently quarantined. All active memory records passed through the 7-layer heuristic detection pipeline without triggering flags.'
+                          : 'No quarantined records match your search filter.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <span
+                        className="mono"
+                        style={{ fontWeight: 600, color: 'var(--text-primary)' }}
+                      >
+                        {r.id}
+                      </span>
+                    </td>
+                    <td>
+                      <code
+                        className="cell-clip"
+                        style={{
+                          display: 'block',
+                          fontSize: '0.8rem',
+                          color: 'var(--text-primary)',
+                        }}
+                        title={r.command}
+                      >
+                        {r.command}
+                      </code>
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          color: 'var(--status-danger)',
+                          fontSize: '0.8rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {r.flagReason}
+                      </span>
+                    </td>
+                    <td
+                      style={{
+                        fontSize: '0.76rem',
+                        color: 'var(--text-muted)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {new Date(r.createdAt).toLocaleString()}
+                    </td>
+                    <td>
+                      <span className="badge rose">{r.status.toUpperCase()}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── PIPELINE CANVAS ── */}
       <div className="n8n-canvas-container">
         <div className="n8n-canvas-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span className="mini-label" style={{ margin: 0 }}>
               Pipeline Topology
             </span>
-            <span className="badge gray" style={{ fontSize: '0.7rem' }}>5 Defense Stages</span>
+            <span className="badge gray" style={{ fontSize: '0.7rem' }}>
+              5 Defense Stages
+            </span>
             <span className="badge emerald" style={{ fontSize: '0.7rem' }}>
               <IconCheck /> Synchronous Execution
             </span>
@@ -299,147 +546,79 @@ export function SecurityAuditScreen({ onFetchAudit }: Props): ReactNode {
           </span>
         </div>
 
-        {/* Authentic N8N Node Sequence Flow */}
         <div className="n8n-canvas-flow">
           <div className="n8n-canvas-flow-inner">
-            {/* Node 1: Raw Ingress (Trigger Node) */}
-            <div
-              className="n8n-node-wrapper"
-              onClick={() => setSelectedStageId('stage-1')}
-              tabIndex={0}
-              role="button"
-              aria-label="Inspect Raw Ingress node"
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedStageId('stage-1')}
-            >
-              <div className={`n8n-node-box trigger-node ${selectedStageId === 'stage-1' ? 'selected' : ''}`}>
-                <div className="n8n-trigger-icon" title="Pipeline Trigger Event">
-                  <IconLightning />
+            {STAGES.map((stage, idx) => (
+              <div key={stage.id} style={{ display: 'contents' }}>
+                {idx > 0 && (
+                  <div className="n8n-connector-line">
+                    <svg width="44" height="76" viewBox="0 0 44 76" fill="none">
+                      {idx === 1 && (
+                        <defs>
+                          <marker
+                            id="arrowHead"
+                            markerWidth="6"
+                            markerHeight="6"
+                            refX="5"
+                            refY="3"
+                            orient="auto"
+                          >
+                            <path d="M0,0 L6,3 L0,6" fill="var(--border-strong)" />
+                          </marker>
+                        </defs>
+                      )}
+                      <line
+                        x1="0"
+                        y1="38"
+                        x2="38"
+                        y2="38"
+                        stroke="var(--border-strong)"
+                        strokeWidth="1.5"
+                        markerEnd="url(#arrowHead)"
+                      />
+                    </svg>
+                  </div>
+                )}
+
+                <div
+                  className="n8n-node-wrapper"
+                  onClick={() => setSelectedStageId(stage.id)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={stage.ariaLabel}
+                  aria-pressed={selectedStageId === stage.id}
+                  onKeyDown={nodeKeyDown(stage.id)}
+                >
+                  <div
+                    className={`n8n-node-box ${idx === 0 ? 'trigger-node' : ''} ${selectedStageId === stage.id ? 'selected' : ''}`}
+                  >
+                    {idx === 0 ? (
+                      <div className="n8n-trigger-icon" title="Pipeline Trigger Event">
+                        <IconLightning />
+                      </div>
+                    ) : (
+                      <div className="n8n-port-in" />
+                    )}
+                    {stage.icon}
+                    <div className="n8n-port-out" />
+                  </div>
+                  <div className="n8n-node-label">{stage.stageName}</div>
+                  <div className="n8n-node-sub">{stage.sub}</div>
                 </div>
-                <IconTerminal />
-                <div className="n8n-port-out" />
               </div>
-              <div className="n8n-node-label">Raw Ingress</div>
-              <div className="n8n-node-sub">interceptor: stdio</div>
-            </div>
-
-            {/* Connector 1 -> 2 */}
-            <div className="n8n-connector-line">
-              <svg width="44" height="76" viewBox="0 0 44 76" fill="none">
-                <defs>
-                  <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6" fill="var(--border-strong)" />
-                  </marker>
-                </defs>
-                <line x1="0" y1="38" x2="38" y2="38" stroke="var(--border-strong)" strokeWidth="1.5" markerEnd="url(#arrowHead)" />
-              </svg>
-            </div>
-
-            {/* Node 2: Pattern Redactor */}
-            <div
-              className="n8n-node-wrapper"
-              onClick={() => setSelectedStageId('stage-2')}
-              tabIndex={0}
-              role="button"
-              aria-label="Inspect Pattern Redactor node"
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedStageId('stage-2')}
-            >
-              <div className={`n8n-node-box ${selectedStageId === 'stage-2' ? 'selected' : ''}`}>
-                <div className="n8n-port-in" />
-                <IconKey />
-                <div className="n8n-port-out" />
-              </div>
-              <div className="n8n-node-label">Pattern Redactor</div>
-              <div className="n8n-node-sub">regex: ADR-005</div>
-            </div>
-
-            {/* Connector 2 -> 3 */}
-            <div className="n8n-connector-line">
-              <svg width="44" height="76" viewBox="0 0 44 76" fill="none">
-                <line x1="0" y1="38" x2="38" y2="38" stroke="var(--border-strong)" strokeWidth="1.5" markerEnd="url(#arrowHead)" />
-              </svg>
-            </div>
-
-            {/* Node 3: Entropy Gate */}
-            <div
-              className="n8n-node-wrapper"
-              onClick={() => setSelectedStageId('stage-3')}
-              tabIndex={0}
-              role="button"
-              aria-label="Inspect Entropy Gate node"
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedStageId('stage-3')}
-            >
-              <div className={`n8n-node-box ${selectedStageId === 'stage-3' ? 'selected' : ''}`}>
-                <div className="n8n-port-in" />
-                <IconWaveform />
-                <div className="n8n-port-out" />
-              </div>
-              <div className="n8n-node-label">Entropy Gate</div>
-              <div className="n8n-node-sub">entropy: H &gt; 4.5</div>
-            </div>
-
-            {/* Connector 3 -> 4 */}
-            <div className="n8n-connector-line">
-              <svg width="44" height="76" viewBox="0 0 44 76" fill="none">
-                <line x1="0" y1="38" x2="38" y2="38" stroke="var(--border-strong)" strokeWidth="1.5" markerEnd="url(#arrowHead)" />
-              </svg>
-            </div>
-
-            {/* Node 4: Poisoning Defense */}
-            <div
-              className="n8n-node-wrapper"
-              onClick={() => setSelectedStageId('stage-4')}
-              tabIndex={0}
-              role="button"
-              aria-label="Inspect Poisoning Defense node"
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedStageId('stage-4')}
-            >
-              <div className={`n8n-node-box ${selectedStageId === 'stage-4' ? 'selected' : ''}`}>
-                <div className="n8n-port-in" />
-                <IconRadar />
-                <div className="n8n-port-out" />
-              </div>
-              <div className="n8n-node-label">Poisoning Defense</div>
-              <div className="n8n-node-sub">7: detectors</div>
-            </div>
-
-            {/* Connector 4 -> 5 */}
-            <div className="n8n-connector-line">
-              <svg width="44" height="76" viewBox="0 0 44 76" fill="none">
-                <line x1="0" y1="38" x2="38" y2="38" stroke="var(--border-strong)" strokeWidth="1.5" markerEnd="url(#arrowHead)" />
-              </svg>
-            </div>
-
-            {/* Node 5: Storage & Gate */}
-            <div
-              className="n8n-node-wrapper"
-              onClick={() => setSelectedStageId('stage-5')}
-              tabIndex={0}
-              role="button"
-              aria-label="Inspect Storage and Gate destination"
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedStageId('stage-5')}
-            >
-              <div className={`n8n-node-box ${selectedStageId === 'stage-5' ? 'selected' : ''}`}>
-                <div className="n8n-port-in" />
-                <IconDatabase />
-                <div className="n8n-port-out" />
-              </div>
-              <div className="n8n-node-label">Storage & Gate</div>
-              <div className="n8n-node-sub">sqlite: fts5</div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* ── STAGE DEEP-DIVE INSPECTOR (SHADCN CARD COMPOSITION) ── */}
+        {/* ── STAGE DEEP-DIVE INSPECTOR ── */}
         <div className="n8n-inspector">
           <div className="n8n-inspector-header">
             <div>
               <div className="n8n-inspector-eyebrow">
-                <IconShield />
+                <IconShield size={14} />
                 <span>Stage Deep-Dive Inspector</span>
               </div>
-              <h3 className="n8n-inspector-title">
-                {currentStage.title}
-              </h3>
+              <h3 className="n8n-inspector-title">{currentStage.title}</h3>
             </div>
 
             <div className="n8n-inspector-badges">
@@ -479,98 +658,60 @@ export function SecurityAuditScreen({ onFetchAudit }: Props): ReactNode {
         </div>
       </div>
 
-      {/* ── QUARANTINED RECORDS CATALOG TABLE ── */}
-      <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-          }}
-        >
-          <div>
-            <h2 className="panel-title" style={{ display: 'inline' }}>
-              Quarantined Records Catalog
-            </h2>
-            <span style={{ marginLeft: '0.65rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              ({quarantinedRecords.length} records quarantined)
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <input
-              type="text"
-              className="input"
-              style={{ width: '240px', fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}
-              placeholder="Filter quarantined records..."
-              value={filterQuery}
-              onChange={(e) => setFilterQuery(e.target.value)}
-            />
-            <span className="badge rose">Excluded from Default Prompt Retrieval</span>
-          </div>
-        </div>
-
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Record ID</th>
-                <th>Command</th>
-                <th>Detection Reason</th>
-                <th>Quarantined At</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: '3.5rem 1.5rem' }}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">
-                        <IconShield />
-                      </div>
-                      <h2 className="empty-state-title">Quarantine Log Clean</h2>
-                      <p className="empty-state-desc">
-                        {quarantinedRecords.length === 0
-                          ? 'No records are currently quarantined. All active memory records passed through the 7-layer heuristic detection pipeline without triggering flags.'
-                          : 'No quarantined records match your search filter.'}
-                      </p>
+      {/* ── LIVE LAYER STATUS REPORTED BY THE BRIDGE ── */}
+      {(redactionLayers.length > 0 || detectors.length > 0) && (
+        <div className="redaction-layers-grid">
+          {redactionLayers.length > 0 && (
+            <div className="panel">
+              <div className="panel-header">
+                <h2 className="panel-title">Redaction Layers (reported)</h2>
+                <span className="badge gray">{redactionLayers.length} layers</span>
+              </div>
+              <div className="subsystem-rows">
+                {redactionLayers.map((l) => (
+                  <div key={l.layer} className="subsystem-row">
+                    <div className="subsystem-row-header">
+                      <span className="subsystem-row-title">{l.layer}</span>
+                      <span className={`badge ${l.status === 'active' ? 'emerald' : 'gray'}`}>
+                        {l.status.toUpperCase()}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredRecords.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <span className="mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {r.id}
+                    <div className="subsystem-row-desc">
+                      {l.recall !== undefined && <>Recall {(l.recall * 100).toFixed(0)}% </>}
+                      {l.threshold !== undefined && <>· Threshold {l.threshold} </>}
+                      {l.patterns && l.patterns.length > 0 && <>· {l.patterns.length} patterns </>}
+                      {l.highEntropyCaptured !== undefined && (
+                        <>· High-entropy {l.highEntropyCaptured ? 'captured' : 'not captured'}</>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {detectors.length > 0 && (
+            <div className="panel">
+              <div className="panel-header">
+                <h2 className="panel-title">Poisoning Detectors (reported)</h2>
+                <span className="badge gray">{detectors.length} detectors</span>
+              </div>
+              <div className="subsystem-rows">
+                {detectors.map((d) => (
+                  <div key={d.id} className="subsystem-row">
+                    <div className="subsystem-row-header">
+                      <span className="subsystem-row-title">{d.name}</span>
+                      <span className={`badge ${d.status === 'active' ? 'emerald' : 'gray'}`}>
+                        {d.status.toUpperCase()}
                       </span>
-                    </td>
-                    <td>
-                      <code style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>{r.command}</code>
-                    </td>
-                    <td>
-                      <span style={{ color: 'var(--status-danger)', fontSize: '0.8rem', fontWeight: 500 }}>
-                        {r.flagReason}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                      {new Date(r.createdAt).toLocaleString()}
-                    </td>
-                    <td>
-                      <span className="badge rose">{r.status.toUpperCase()}</span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

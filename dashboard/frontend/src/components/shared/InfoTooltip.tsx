@@ -7,9 +7,17 @@ export interface InfoTooltipProps {
   ariaLabel?: string;
 }
 
-export function InfoTooltip({ content, size = 'sm', ariaLabel = 'More information' }: InfoTooltipProps): ReactNode {
+export function InfoTooltip({
+  content,
+  size = 'sm',
+  ariaLabel = 'More information',
+}: InfoTooltipProps): ReactNode {
   const [open, setOpen] = useState(false);
-  const [coords, setCoords] = useState<{ top: number; left: number; placement: 'top' | 'bottom' } | null>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    placement: 'top' | 'bottom';
+  } | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -164,7 +172,15 @@ export function InfoTooltip({ content, size = 'sm', ariaLabel = 'More informatio
         onMouseLeave={handleClose}
         style={{ width: iconDim, height: iconDim }}
       >
-        <svg viewBox="0 0 16 16" fill="none" width="100%" height="100%" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          width="100%"
+          height="100%"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        >
           <circle cx="8" cy="8" r="6.5" />
           <line x1="8" y1="7" x2="8" y2="11.5" />
           <circle cx="8" cy="4.5" r="0.5" fill="currentColor" stroke="none" />
@@ -190,7 +206,7 @@ export function InfoTooltip({ content, size = 'sm', ariaLabel = 'More informatio
           >
             {content}
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );

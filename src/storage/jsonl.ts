@@ -139,7 +139,9 @@ export class JsonlStorage {
             event: 'jsonl_corrupted_line',
             file: this.filePath,
             lineNumber: i + 1,
-            corruptedLineHash: createHash('sha256').update(lines[i] ?? '').digest('hex'),
+            corruptedLineHash: createHash('sha256')
+              .update(lines[i] ?? '')
+              .digest('hex'),
             recovery: 'line skipped; original file preserved; rebuild index from valid lines',
           }) + '\n',
         );
@@ -171,7 +173,9 @@ export class JsonlStorage {
             event: 'jsonl_corrupted_line',
             file: this.filePath,
             lineNumber: i + 1,
-            corruptedLineHash: createHash('sha256').update(lines[i] ?? '').digest('hex'),
+            corruptedLineHash: createHash('sha256')
+              .update(lines[i] ?? '')
+              .digest('hex'),
             recovery: 'line skipped; original file preserved; rebuild index from valid lines',
           }) + '\n',
         );

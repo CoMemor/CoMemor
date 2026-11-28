@@ -147,7 +147,11 @@ describe('C-02 / X-01 — indexRecord atomicity via SAVEPOINT', () => {
   });
 
   afterEach(() => {
-    try { idx.close(); } catch { /* already closed */ }
+    try {
+      idx.close();
+    } catch {
+      /* already closed */
+    }
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -170,7 +174,9 @@ describe('C-02 / X-01 — indexRecord atomicity via SAVEPOINT', () => {
     db.exec('DROP TABLE records_fts');
 
     const rec = makeRecord({ id: 'fail-rec' });
-    expect(() => idx.indexRecord(rec)).toThrow();
+    expect(() => {
+      idx.indexRecord(rec);
+    }).toThrow();
     expect(idx.isIndexDirty()).toBe(true);
   });
 });
@@ -180,8 +186,12 @@ describe('C-02 / X-01 — indexRecord atomicity via SAVEPOINT', () => {
 describe('X-01 — rebuildIndex single-transaction metadata write', () => {
   let dir: string;
 
-  beforeEach(() => { dir = tmpDir(); });
-  afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    dir = tmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 
   it('writes is_dirty=false and reconciled_count inside the same transaction as records', () => {
     const recs = [makeRecord(), makeRecord()];
@@ -199,7 +209,9 @@ describe('X-01 — rebuildIndex single-transaction metadata write', () => {
     const db = (idx as unknown as { db: { exec: (s: string) => void } }).db;
     db.exec('DROP TABLE records_fts');
 
-    expect(() => idx.rebuildIndex([makeRecord()])).toThrow();
+    expect(() => {
+      idx.rebuildIndex([makeRecord()]);
+    }).toThrow();
     expect(idx.isIndexDirty()).toBe(true);
     idx.close();
   });
@@ -210,10 +222,14 @@ describe('X-01 — rebuildIndex single-transaction metadata write', () => {
 describe('C-03 / X-04 — corrupt JSONL recovery: no raw content in stderr log', () => {
   let dir: string;
 
-  beforeEach(() => { dir = tmpDir(); });
-  afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+  beforeEach(() => {
+    dir = tmpDir();
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 
-  it('skips corrupted line, parses valid lines, logs hash not raw content', async () => {
+  it('skips corrupted line, parses valid lines, logs hash not raw content', () => {
     const filePath = path.join(dir, 'records.jsonl');
     const SECRET = 'SECRET_API_KEY=abc123xyz';
     const goodRec = makeRecord({ id: 'good-rec' });
@@ -221,7 +237,12 @@ describe('C-03 / X-04 — corrupt JSONL recovery: no raw content in stderr log',
     // Write: valid, corrupted (with secret), valid
     fs.writeFileSync(
       filePath,
-      JSON.stringify(goodRec) + '\n' + SECRET + '\n' + JSON.stringify(makeRecord({ id: 'good-rec-2' })) + '\n',
+      JSON.stringify(goodRec) +
+        '\n' +
+        SECRET +
+        '\n' +
+        JSON.stringify(makeRecord({ id: 'good-rec-2' })) +
+        '\n',
       'utf8',
     );
 

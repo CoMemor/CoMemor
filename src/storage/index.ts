@@ -91,9 +91,9 @@ export class SqliteIndex {
 
   private _getMeta(key: string): string | undefined {
     try {
-      const row = this.db
-        .prepare('SELECT value FROM index_metadata WHERE key = ?')
-        .get(key) as { value: string } | undefined;
+      const row = this.db.prepare('SELECT value FROM index_metadata WHERE key = ?').get(key) as
+        | { value: string }
+        | undefined;
       return row?.value;
     } catch {
       return undefined;
@@ -204,8 +204,16 @@ export class SqliteIndex {
       this._indexRecordStatements(record);
       this.db.exec('RELEASE SAVEPOINT sp_index_record');
     } catch (e) {
-      try { this.db.exec('ROLLBACK TO SAVEPOINT sp_index_record'); } catch { /* best-effort */ }
-      try { this.db.exec('RELEASE SAVEPOINT sp_index_record'); } catch { /* best-effort */ }
+      try {
+        this.db.exec('ROLLBACK TO SAVEPOINT sp_index_record');
+      } catch {
+        /* best-effort */
+      }
+      try {
+        this.db.exec('RELEASE SAVEPOINT sp_index_record');
+      } catch {
+        /* best-effort */
+      }
       this.markIndexDirty(true);
       throw e;
     }
@@ -229,34 +237,50 @@ export class SqliteIndex {
       }
       // Write all metadata inside the same transaction.
       this.db
-        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('is_dirty', 'false')
-                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .prepare(
+          `INSERT INTO index_metadata (key, value) VALUES ('is_dirty', 'false')
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
         .run();
       this.db
-        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('reconciled_count', ?)
-                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .prepare(
+          `INSERT INTO index_metadata (key, value) VALUES ('reconciled_count', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
         .run(String(records.length));
       this.db
-        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('index_schema_version', ?)
-                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .prepare(
+          `INSERT INTO index_metadata (key, value) VALUES ('index_schema_version', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
         .run(String(INDEX_SCHEMA_VERSION));
       this.db
-        .prepare(`INSERT INTO index_metadata (key, value) VALUES ('last_reconciled_at', ?)
-                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+        .prepare(
+          `INSERT INTO index_metadata (key, value) VALUES ('last_reconciled_at', ?)
+                  ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
         .run(new Date().toISOString());
       if (fingerprint) {
         this.db
-          .prepare(`INSERT INTO index_metadata (key, value) VALUES ('canonical_records_sha256', ?)
-                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+          .prepare(
+            `INSERT INTO index_metadata (key, value) VALUES ('canonical_records_sha256', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          )
           .run(fingerprint.sha256);
         this.db
-          .prepare(`INSERT INTO index_metadata (key, value) VALUES ('canonical_records_size', ?)
-                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
+          .prepare(
+            `INSERT INTO index_metadata (key, value) VALUES ('canonical_records_size', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          )
           .run(String(fingerprint.size));
       }
       this.db.exec('COMMIT');
     } catch (e) {
-      try { this.db.exec('ROLLBACK'); } catch { /* best-effort */ }
+      try {
+        this.db.exec('ROLLBACK');
+      } catch {
+        /* best-effort */
+      }
       this.markIndexDirty(true);
       throw e;
     }

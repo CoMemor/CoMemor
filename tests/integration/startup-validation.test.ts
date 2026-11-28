@@ -140,7 +140,12 @@ describe('Startup Environment Validation', () => {
     expect(result.stdout).toBe(''); // Crucial stdio invariant: stdout must remain clean
     expect(result.stderr).toContain('"error":"startup_validation_failed"');
     expect(result.stderr).toContain('"field":"AGENT_MEMORY_DIR"');
-    const parsed = JSON.parse(result.stderr.trim().split('\n')[0]!);
+    const jsonLine = result.stderr
+      .split('\n')
+      .map((l) => l.trim())
+      .find((l) => l.includes('"error":"startup_validation_failed"'));
+    expect(jsonLine).toBeDefined();
+    const parsed = JSON.parse(jsonLine!);
     expect(parsed.error).toBe('startup_validation_failed');
     expect(parsed.field).toBe('AGENT_MEMORY_DIR');
   }, 15000);

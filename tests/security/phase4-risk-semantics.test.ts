@@ -136,9 +136,18 @@ describe('CommandPolicyEngine — Phase 4 risk semantics', () => {
 
   it('every allowed command has at least one riskReason', () => {
     const commands = [
-      'npm test', 'npm install', 'npm run build', 'npx pkg',
-      'pnpm add lodash', 'pnpm run dev', 'yarn add react', 'bun run dev',
-      'cargo check', 'go run main.go', 'python script.py', 'tsc',
+      'npm test',
+      'npm install',
+      'npm run build',
+      'npx pkg',
+      'pnpm add lodash',
+      'pnpm run dev',
+      'yarn add react',
+      'bun run dev',
+      'cargo check',
+      'go run main.go',
+      'python script.py',
+      'tsc',
     ];
     for (const cmd of commands) {
       const result = engine.validateCommand(cmd);
@@ -151,16 +160,16 @@ describe('CommandPolicyEngine — Phase 4 risk semantics', () => {
 
   // ─── No forbidden language ───────────────────────────────────────────────────
 
-  it('no "sandboxed" language in any verifyFix response', async () => {
+  it('no "sandboxed" language in any verifyFix response', () => {
     // We can test via validateCommand which populates riskReasons
-    const commands = [
-      'npm test', 'npm install', 'npx pkg', 'cargo check', 'go run main.go',
-    ];
+    const commands = ['npm test', 'npm install', 'npx pkg', 'cargo check', 'go run main.go'];
     for (const cmd of commands) {
       const result = engine.validateCommand(cmd);
       const allText = JSON.stringify(result);
       expect(allText, `"sandboxed" found in result for: ${cmd}`).not.toMatch(/sandboxed/i);
-      expect(allText, `"safe to execute" found in result for: ${cmd}`).not.toMatch(/safe\s+to\s+execute/i);
+      expect(allText, `"safe to execute" found in result for: ${cmd}`).not.toMatch(
+        /safe\s+to\s+execute/i,
+      );
     }
   });
 

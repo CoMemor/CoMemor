@@ -109,6 +109,7 @@ describe('record_verification_outcome — integration', () => {
     expect(stats.failedVerificationsCount).toBe(0);
     expect(stats.unverifiedRecordsCount).toBe(0);
     // Deprecated alias must equal successfulVerificationsCount
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(stats.verifiedFixesCount).toBe(stats.successfulVerificationsCount);
 
     // ---- Step 6: find_fix → verificationSummary populated ----
@@ -143,7 +144,9 @@ describe('record_verification_outcome — integration', () => {
     });
 
     // verify_fix returns policy result only — never 'passed' as a verification outcome
-    expect(['dry_run_allowed', 'dry_run_denied', 'pending_approval']).toContain(verifyResult.status);
+    expect(['dry_run_allowed', 'dry_run_denied', 'pending_approval']).toContain(
+      verifyResult.status,
+    );
 
     // The record should still have zero verification events
     const stats = service.getStats();
@@ -187,6 +190,7 @@ describe('record_verification_outcome — integration', () => {
     expect(stats.successfulVerificationsCount).toBe(0);
     expect(stats.failedVerificationsCount).toBe(1);
     // deprecated alias must NOT count failed-only
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(stats.verifiedFixesCount).toBe(0);
   });
 

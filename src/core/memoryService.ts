@@ -34,14 +34,20 @@ import {
 import { redactSensitiveData } from './redact.js';
 import { normalizeOutput, CURRENT_NORMALIZER_VERSION } from './normalize.js';
 import { generateFingerprint } from './fingerprint.js';
-import { extractCommandFamily, calculateSimilarity, calculateTokenJaccard, calculateTrigramSimilarity, computeRecordAge } from './match.js';
+import {
+  extractCommandFamily,
+  calculateSimilarity,
+  calculateTokenJaccard,
+  calculateTrigramSimilarity,
+  computeRecordAge,
+} from './match.js';
 import { checkRecordStaleness } from './staleness.js';
 import { detectPoisoningInRecord } from './poisonDetector.js';
 import { CommandPolicyEngine } from '../policy/commandPolicy.js';
 import { createMemoryLogger, type MemoryLogger } from './logger.js';
 import { JsonlStorage } from '../storage/jsonl.js';
 import { SqliteIndex } from '../storage/index.js';
-import { VerificationEventStore, computeSummary } from '../storage/verificationEvents.js';
+import { VerificationEventStore } from '../storage/verificationEvents.js';
 import { extractDiagnosticSignals } from './diagnostics.js';
 import { buildEnvironmentSnapshot } from './environment.js';
 import type { RetrievalExplanation } from '../types.js';
@@ -465,7 +471,13 @@ export class MemoryService {
       );
       const explanation: RetrievalExplanation = {
         candidateSource: 'exact_fingerprint',
-        diagnosticSignals: { errorCodes: [], exceptionNames: [], filePaths: [], packageVersions: [], technicalTokens: [] },
+        diagnosticSignals: {
+          errorCodes: [],
+          exceptionNames: [],
+          filePaths: [],
+          packageVersions: [],
+          technicalTokens: [],
+        },
         tokenJaccardScore: 1.0,
         trigramScore: 1.0,
         repositoryFilter: this.repositoryId,

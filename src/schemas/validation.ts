@@ -59,6 +59,7 @@ export const RecordVerificationOutcomeZodSchema = z.object({
   attemptId: z.string().min(1).max(128),
   outcome: z.enum(['passed', 'failed']),
   method: z.enum(['host_reported', 'human_confirmed']),
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   reportedAt: z.string().datetime().optional(),
   evidenceRef: z.string().max(512).optional(),
   note: z.string().max(1024).optional(),

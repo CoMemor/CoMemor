@@ -33,6 +33,10 @@ export interface MemoryRecordSummary {
     status: string;
   } | null;
   provenance: {
+    commit?: string | null;
+    branch?: string;
+    author?: string;
+    isDirty?: boolean;
     gitCommit?: string;
     gitBranch?: string;
     gitAuthor?: string;
@@ -55,9 +59,12 @@ export interface FullMemoryRecord extends MemoryRecordSummary {
   };
   verification: {
     status: string;
-    verifiedAt?: string;
+    verifiedAt?: string | null;
     method?: string;
-    wilsonLowerBound?: number;
+    wilsonLowerBound?: number | null;
+    attemptCount?: number;
+    successCount?: number;
+    failureCount?: number;
   };
   supersedes?: string | null;
 }

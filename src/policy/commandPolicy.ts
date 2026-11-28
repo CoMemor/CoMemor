@@ -107,7 +107,7 @@ function assessRisk(binary: string, args: string[]): RiskAssessment {
       risk = 'high';
       reasons.push(
         `'${binary}' downloads and executes remote packages without prior install verification. ` +
-        `The package author controls the executed code. Review the package source before running.`,
+          `The package author controls the executed code. Review the package source before running.`,
       );
       break;
 
@@ -116,13 +116,13 @@ function assessRisk(binary: string, args: string[]): RiskAssessment {
         risk = 'medium';
         reasons.push(
           `'npm install' executes package lifecycle scripts (preinstall, install, postinstall) ` +
-          `controlled by package authors. These scripts run with the same privileges as the shell.`,
+            `controlled by package authors. These scripts run with the same privileges as the shell.`,
         );
       } else if (sub === 'run' || sub === 'exec') {
         risk = 'medium';
         reasons.push(
           `'npm run' executes repository-controlled project scripts defined in package.json. ` +
-          `The script content is not inspected by this policy engine.`,
+            `The script content is not inspected by this policy engine.`,
         );
       }
       break;
@@ -184,7 +184,7 @@ function assessRisk(binary: string, args: string[]): RiskAssessment {
         risk = 'medium';
         reasons.push(
           `'go run' compiles and immediately executes Go source files. ` +
-          `The compiled program may perform arbitrary operations.`,
+            `The compiled program may perform arbitrary operations.`,
         );
       }
       break;
@@ -193,8 +193,8 @@ function assessRisk(binary: string, args: string[]): RiskAssessment {
       if (sub === 'build' || sub === 'check' || sub === 'run' || sub === 'test') {
         risk = 'medium';
         reasons.push(
-          `'cargo ${sub ?? ''}' may execute Cargo build scripts (build.rs) and procedural macros ` +
-          `during compilation. These run arbitrary Rust code with the build system's privileges.`,
+          `'cargo ${sub}' may execute Cargo build scripts (build.rs) and procedural macros ` +
+            `during compilation. These run arbitrary Rust code with the build system's privileges.`,
         );
       }
       break;
@@ -206,7 +206,7 @@ function assessRisk(binary: string, args: string[]): RiskAssessment {
   if (reasons.length === 0) {
     reasons.push(
       `Command passes static policy checks. ` +
-      `This is a proposal for review — not proof that execution is safe.`,
+        `This is a proposal for review — not proof that execution is safe.`,
     );
   }
 
@@ -236,7 +236,12 @@ export class CommandPolicyEngine {
     riskReasons?: string[];
   } {
     if (!commandString || commandString.trim().length === 0) {
-      return { allowed: false, reason: 'Empty command string', risk: 'high', riskReasons: ['Empty command string'] };
+      return {
+        allowed: false,
+        reason: 'Empty command string',
+        risk: 'high',
+        riskReasons: ['Empty command string'],
+      };
     }
 
     const trimmed = commandString.trim();
@@ -305,7 +310,9 @@ export class CommandPolicyEngine {
           allowed: false,
           reason: `Inline code evaluation flag (-e/--eval) is prohibited for ${binary}`,
           risk: 'high',
-          riskReasons: [`'${binary} -e/--eval' executes arbitrary inline code. Strictly prohibited.`],
+          riskReasons: [
+            `'${binary} -e/--eval' executes arbitrary inline code. Strictly prohibited.`,
+          ],
         };
       }
     }
@@ -347,7 +354,9 @@ export class CommandPolicyEngine {
               allowed: false,
               reason: `Workspace escape attempt detected in argument: '${arg}' (resolves outside workspace root)`,
               risk: 'high',
-              riskReasons: [`Argument '${arg}' resolves outside the workspace root. Path traversal is prohibited.`],
+              riskReasons: [
+                `Argument '${arg}' resolves outside the workspace root. Path traversal is prohibited.`,
+              ],
             };
           }
         }
@@ -498,4 +507,3 @@ export class CommandPolicyEngine {
     };
   }
 }
-

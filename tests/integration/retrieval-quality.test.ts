@@ -172,7 +172,10 @@ describe('Phase 3 — Retrieval quality benchmark (Recall@K, Precision@K, MRR)',
 
   beforeEach(async () => {
     dir = tmpDir();
-    svc = new MemoryService({ memoryDir: path.join(dir, '.agent-memory'), repositoryId: 'bench-repo' });
+    svc = new MemoryService({
+      memoryDir: path.join(dir, '.agent-memory'),
+      repositoryId: 'bench-repo',
+    });
 
     // Seed all records
     for (const r of RECORDS) {
@@ -182,13 +185,16 @@ describe('Phase 3 — Retrieval quality benchmark (Recall@K, Precision@K, MRR)',
         exitCode: 1,
         fixCommands: (r.fix as { commands: string[] } | null)?.commands ?? ['echo fix'],
         explanation: (r.fix as { explanation: string } | null)?.explanation ?? 'fix',
-        repositoryId: 'bench-repo',
       });
     }
   });
 
   afterEach(() => {
-    try { svc.close(); } catch { /* already closed */ }
+    try {
+      svc.close();
+    } catch {
+      /* already closed */
+    }
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -199,7 +205,6 @@ describe('Phase 3 — Retrieval quality benchmark (Recall@K, Precision@K, MRR)',
         output: fixture.queryOutput,
         threshold: 0.1, // low threshold to get candidates; then assess ranking
         limit: 10,
-        repositoryId: 'bench-repo',
       });
 
       const rankedIds = result.matches.map((m) => m.id);
@@ -269,7 +274,6 @@ describe('Phase 3 — Retrieval quality benchmark (Recall@K, Precision@K, MRR)',
       output: 'error TS2322 Type string not assignable',
       threshold: 0.05,
       limit: 10,
-      repositoryId: 'bench-repo',
     });
 
     for (const m of result.matches) {

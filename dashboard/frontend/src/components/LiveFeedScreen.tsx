@@ -12,45 +12,62 @@ interface Props {
 function IconSignal(): ReactNode {
   return (
     <svg
-      width="32"
-      height="32"
+      width="22"
+      height="22"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      style={{ opacity: 0.45 }}
     >
       <path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 4v16" />
     </svg>
   );
 }
 
+type FeedFilter = 'all' | 'record' | 'find' | 'verify' | 'quarantine';
+
+function matchesFilter(e: LogEvent, filter: FeedFilter): boolean {
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'record':
+      return Boolean(e.event?.includes('record'));
+    case 'find':
+      return Boolean(e.event?.includes('find'));
+    case 'verify':
+      return Boolean(e.event?.includes('verify'));
+    case 'quarantine':
+      return Boolean(e.quarantined || e.status?.includes('quarantine'));
+    default:
+      return true;
+  }
+}
+
+const FILTERS: { id: FeedFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'record', label: 'Record Failure' },
+  { id: 'find', label: 'Find Fix' },
+  { id: 'verify', label: 'Verify Fix' },
+  { id: 'quarantine', label: 'Quarantine Alerts' },
+];
+
 export function LiveFeedScreen({ events, isStreaming, onClear }: Props): ReactNode {
-  const [filter, setFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<FeedFilter>('all');
   const [autoScroll, setAutoScroll] = useState<boolean>(true);
   const feedRef = useRef<HTMLDivElement | null>(null);
 
-  const filteredEvents = events.filter((e) => {
-    if (filter === 'all') return true;
-    if (filter === 'record') return e.event?.includes('record');
-    if (filter === 'find') return e.event?.includes('find');
-    if (filter === 'verify') return e.event?.includes('verify');
-    if (filter === 'quarantine') return e.quarantined || e.status?.includes('quarantine');
-    return true;
-  });
+  const filteredEvents = events.filter((e) => matchesFilter(e, filter));
+  const countFor = (f: FeedFilter): number => events.filter((e) => matchesFilter(e, f)).length;
 
   /*
    * estimateSize should be large enough to avoid overlap.
-   * Each item has two lines of content + padding. 88px covers it well;
-   * the virtualizer will remeasure dynamically via measureElement when
-   * content is actually taller.
+   * measureElement corrects the real height dynamically.
    */
   const virtualizer = useVirtualizer({
     count: filteredEvents.length,
     getScrollElement: () => feedRef.current,
-    // 62px accurately covers a 2-line item; measureElement corrects dynamically
     estimateSize: () => 62,
     overscan: 8,
   });
@@ -96,6 +113,8 @@ export function LiveFeedScreen({ events, isStreaming, onClear }: Props): ReactNo
     };
   };
 
+  const hasEvents = events.length > 0;
+
   return (
     <div>
       <div className="screen-header">
@@ -111,44 +130,44 @@ export function LiveFeedScreen({ events, isStreaming, onClear }: Props): ReactNo
             <div className="status-badge">
               <span
                 className="pulse-dot"
-                style={{ background: isStreaming ? 'var(--status-success)' : 'var(--status-danger)' }}
+                style={{
+                  background: isStreaming ? 'var(--status-success)' : 'var(--status-danger)',
+                }}
               />
-              <span>{isStreaming ? 'SSE Active (Streaming)' : 'Disconnected'}</span>
+              <span>{isStreaming ? 'Streaming' : 'Disconnected'}</span>
             </div>
 
             <button
               className={`btn btn-outline ${autoScroll ? 'active' : ''}`}
               onClick={() => setAutoScroll(!autoScroll)}
               aria-label="Toggle auto-scrolling"
+              aria-pressed={autoScroll}
             >
               {autoScroll ? 'Auto-scroll: ON' : 'Auto-scroll: PAUSED'}
             </button>
 
-            <button className="btn btn-outline" onClick={onClear} aria-label="Clear event stream">
+            <button
+              className="btn btn-outline"
+              onClick={onClear}
+              disabled={!hasEvents}
+              aria-label="Clear event stream"
+            >
               Clear
             </button>
           </div>
         </div>
       </div>
 
-      <div className="feed-filter-bar">
-        {[
-          { id: 'all', label: `All Events (${events.length})` },
-          { id: 'record', label: 'Record Failure' },
-          { id: 'find', label: 'Find Fix' },
-          { id: 'verify', label: 'Verify Fix' },
-          { id: 'quarantine', label: 'Quarantine Alerts' },
-        ].map((tab) => (
+      <div className="feed-filter-bar" role="group" aria-label="Filter events">
+        {FILTERS.map((tab) => (
           <button
             key={tab.id}
             className={`nav-tab ${filter === tab.id ? 'active' : ''}`}
             onClick={() => setFilter(tab.id)}
-            style={{
-              background: filter === tab.id ? 'var(--bg-surface)' : 'transparent',
-              border: filter === tab.id ? '1px solid var(--border-subtle)' : '1px solid transparent',
-            }}
+            aria-pressed={filter === tab.id}
           >
             {tab.label}
+            <span className="nav-badge gray">{countFor(tab.id)}</span>
           </button>
         ))}
       </div>
@@ -159,18 +178,22 @@ export function LiveFeedScreen({ events, isStreaming, onClear }: Props): ReactNo
             <div className="empty-state-icon">
               <IconSignal />
             </div>
-            <h2 className="empty-state-title">Awaiting Live Telemetry</h2>
+            <h2 className="empty-state-title">
+              {hasEvents ? 'No events match this filter' : 'Awaiting Live Telemetry'}
+            </h2>
             <p className="empty-state-desc">
-              Events stream in real time over SSE when an AI agent calls tools
-              (<code>record_failure</code>, <code>find_fix</code>, or <code>verify_fix</code>).
+              {hasEvents ? (
+                <>Choose another filter above to see the other {events.length} captured events.</>
+              ) : (
+                <>
+                  Events stream in real time over SSE when an AI agent calls tools (
+                  <code>record_failure</code>, <code>find_fix</code>, or <code>verify_fix</code>).
+                </>
+              )}
             </p>
           </div>
         ) : (
-          <div
-            ref={feedRef}
-            className="feed-scroll"
-            style={{ height: '620px', overflowY: 'auto', overflowX: 'hidden' }}
-          >
+          <div ref={feedRef} className="feed-scroll">
             {/* Total scrollable height */}
             <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
               {virtualizer.getVirtualItems().map((virtualRow) => {
@@ -188,81 +211,74 @@ export function LiveFeedScreen({ events, isStreaming, onClear }: Props): ReactNo
                       left: 0,
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
-                      // 8px bottom margin = gap between cards; counted in measureElement height
+                      // gap between cards; counted in measureElement height
                       paddingBottom: '8px',
+                      paddingTop: virtualRow.index === 0 ? '8px' : 0,
                     }}
                   >
-                  <div className={`feed-item ${typeClass}`}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                        {badge}
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>
-                          {evt.msg ?? evt.event}
+                    <div className={`feed-item ${typeClass}`}>
+                      <div className="feed-item-head">
+                        <div className="feed-item-title">
+                          {badge}
+                          <span>{evt.msg ?? evt.event}</span>
+                        </div>
+
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: '0.72rem',
+                            color: 'var(--text-muted)',
+                            whiteSpace: 'nowrap',
+                            paddingLeft: '0.75rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {evt.time ? new Date(evt.time).toLocaleTimeString() : 'now'}
                         </span>
                       </div>
 
-                      <span
-                        className="mono"
-                        style={{
-                          fontSize: '0.72rem',
-                          color: 'var(--text-muted)',
-                          whiteSpace: 'nowrap',
-                          paddingLeft: '0.75rem',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {evt.time ? new Date(evt.time).toLocaleTimeString() : 'now'}
-                      </span>
-                    </div>
+                      <div className="feed-item-meta">
+                        {evt.command && (
+                          <div>
+                            <span className="k">cmd: </span>
+                            <code style={{ color: 'var(--text-primary)' }}>
+                              {String(evt.command)}
+                            </code>
+                          </div>
+                        )}
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: '0.75rem 1.1rem',
-                        fontSize: '0.76rem',
-                        color: 'var(--text-secondary)',
-                        marginTop: '0.35rem',
-                      }}
-                    >
-                      {evt.command && (
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>cmd: </span>
-                          <code style={{ color: 'var(--text-primary)' }}>{String(evt.command)}</code>
-                        </div>
-                      )}
+                        {evt.fingerprint && (
+                          <div>
+                            <span className="k">fp: </span>
+                            <span className="mono" style={{ color: 'var(--accent)' }}>
+                              {String(evt.fingerprint).slice(0, 16)}&hellip;
+                            </span>
+                          </div>
+                        )}
 
-                      {evt.fingerprint && (
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>fp: </span>
-                          <span className="mono" style={{ color: 'var(--accent)' }}>
-                            {String(evt.fingerprint).slice(0, 16)}&hellip;
+                        {evt.matchCount !== undefined && (
+                          <div>
+                            <span className="k">matches: </span>
+                            <strong style={{ color: 'var(--status-success)' }}>
+                              {evt.matchCount}
+                            </strong>
+                          </div>
+                        )}
+
+                        {evt.repo && (
+                          <div>
+                            <span className="k">repo: </span>
+                            <span className="mono">{String(evt.repo)}</span>
+                          </div>
+                        )}
+
+                        {evt.quarantined && (
+                          <span className="badge rose" style={{ fontSize: '0.68rem' }}>
+                            BLOCKED
                           </span>
-                        </div>
-                      )}
-
-                      {evt.matchCount !== undefined && (
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>matches: </span>
-                          <strong style={{ color: 'var(--status-success)' }}>{evt.matchCount}</strong>
-                        </div>
-                      )}
-
-                      {evt.repo && (
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>repo: </span>
-                          <span className="mono">{String(evt.repo)}</span>
-                        </div>
-                      )}
-
-                      {evt.quarantined && (
-                        <span className="badge rose" style={{ fontSize: '0.68rem' }}>
-                          BLOCKED
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
                   </div>
                 );
               })}

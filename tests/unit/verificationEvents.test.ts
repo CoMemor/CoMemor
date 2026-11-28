@@ -25,10 +25,7 @@ import { MemoryService } from '../../src/core/memoryService.js';
 import { calculateWilsonScoreLowerBound } from '../../src/core/staleness.js';
 import type { VerificationEvent } from '../../src/types.js';
 
-const makeEvent = (
-  overrides: Partial<VerificationEvent> = {},
-  seq = 1,
-): VerificationEvent => ({
+const makeEvent = (overrides: Partial<VerificationEvent> = {}, seq = 1): VerificationEvent => ({
   schemaVersion: 1,
   eventId: `evt-${String(seq)}`,
   attemptId: `attempt-${String(seq)}`,
@@ -115,10 +112,38 @@ describe('VerificationEventStore — unit', () => {
 
   // ---- Test 6 ----------------------------------------------------------------
   it('6. Multiple attempts (3 passed, 1 failed) → correct Wilson calculation', async () => {
-    await store.append(makeEvent({ attemptId: 'b1', eventId: 'eb1', outcome: 'passed', recordedAt: new Date(1000).toISOString() }));
-    await store.append(makeEvent({ attemptId: 'b2', eventId: 'eb2', outcome: 'passed', recordedAt: new Date(2000).toISOString() }));
-    await store.append(makeEvent({ attemptId: 'b3', eventId: 'eb3', outcome: 'passed', recordedAt: new Date(3000).toISOString() }));
-    await store.append(makeEvent({ attemptId: 'b4', eventId: 'eb4', outcome: 'failed', recordedAt: new Date(4000).toISOString() }));
+    await store.append(
+      makeEvent({
+        attemptId: 'b1',
+        eventId: 'eb1',
+        outcome: 'passed',
+        recordedAt: new Date(1000).toISOString(),
+      }),
+    );
+    await store.append(
+      makeEvent({
+        attemptId: 'b2',
+        eventId: 'eb2',
+        outcome: 'passed',
+        recordedAt: new Date(2000).toISOString(),
+      }),
+    );
+    await store.append(
+      makeEvent({
+        attemptId: 'b3',
+        eventId: 'eb3',
+        outcome: 'passed',
+        recordedAt: new Date(3000).toISOString(),
+      }),
+    );
+    await store.append(
+      makeEvent({
+        attemptId: 'b4',
+        eventId: 'eb4',
+        outcome: 'failed',
+        recordedAt: new Date(4000).toISOString(),
+      }),
+    );
 
     const summary = store.getSummary('rec_test001', 'test-repo');
     expect(summary).not.toBeNull();
@@ -143,7 +168,14 @@ describe('VerificationEventStore — unit', () => {
     fs.appendFileSync(eventsPath, '{corrupt line without closing bracket\n', 'utf8');
 
     // Write another good event
-    await store.append(makeEvent({ attemptId: 'c2', eventId: 'ec2', outcome: 'failed', recordedAt: new Date(2000).toISOString() }));
+    await store.append(
+      makeEvent({
+        attemptId: 'c2',
+        eventId: 'ec2',
+        outcome: 'failed',
+        recordedAt: new Date(2000).toISOString(),
+      }),
+    );
 
     // Both good events should be readable; malformed is skipped
     let stderrOutput = '';
@@ -168,8 +200,18 @@ describe('VerificationEventStore — unit', () => {
   it('10. Summary reconstruction works without SQLite (event store is independent)', () => {
     // Load events into memory directly (simulating SQLite being wiped)
     const fakeEvents: VerificationEvent[] = [
-      makeEvent({ attemptId: 'd1', eventId: 'ed1', outcome: 'passed', recordedAt: new Date(1000).toISOString() }),
-      makeEvent({ attemptId: 'd2', eventId: 'ed2', outcome: 'failed', recordedAt: new Date(2000).toISOString() }),
+      makeEvent({
+        attemptId: 'd1',
+        eventId: 'ed1',
+        outcome: 'passed',
+        recordedAt: new Date(1000).toISOString(),
+      }),
+      makeEvent({
+        attemptId: 'd2',
+        eventId: 'ed2',
+        outcome: 'failed',
+        recordedAt: new Date(2000).toISOString(),
+      }),
     ];
 
     // computeSummary works from raw event array — no SQLite needed
@@ -263,7 +305,7 @@ describe('VerificationEventStore — via MemoryService', () => {
       explanation: 'Type mismatch',
       risk: 'low',
     });
-    const r3 = await service.recordFailure({
+    await service.recordFailure({
       command: 'go test ./...',
       exitCode: 1,
       output: 'FAIL: TestFoo undefined reference',
@@ -296,6 +338,7 @@ describe('VerificationEventStore — via MemoryService', () => {
     // failedVerificationsCount: r2 (only failed events, no passed)
     expect(stats.failedVerificationsCount).toBe(1);
     // deprecated alias should equal successfulVerificationsCount
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(stats.verifiedFixesCount).toBe(stats.successfulVerificationsCount);
     // unverifiedRecordsCount: r3 (no events)
     expect(stats.unverifiedRecordsCount).toBe(1);
