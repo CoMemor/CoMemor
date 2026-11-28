@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoMemor Team Cloud Waitlist — Shared Engineering Memory for Teams</title>
+  <meta name="description"
+    content="Join the CoMemor Team Cloud waitlist for shared, access-controlled MCP engineering memory, cross-repo fix federation, SSO, and audit exports.">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="index, follow">
+
+  <link rel="canonical" href="https://comemor.tech/waitlist">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CoMemor">
+  <meta property="og:title" content="CoMemor Team Cloud Waitlist — Shared Engineering Memory for Teams">
+  <meta property="og:description"
+    content="Join the CoMemor Team Cloud waitlist for shared, access-controlled MCP memory, cross-repo fix federation, SSO, and audit exports.">
+  <meta property="og:url" content="https://comemor.tech/waitlist">
+  <meta property="og:image" content="https://comemor.tech/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="CoMemor Team Cloud Waitlist">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CoMemor Team Cloud Waitlist — Shared Engineering Memory for Teams">
+  <meta name="twitter:description"
+    content="Join the CoMemor Team Cloud waitlist for shared, access-controlled MCP engineering memory across repositories.">
+  <meta name="twitter:image" content="https://comemor.tech/assets/og-image.png">
+  <meta name="twitter:image:alt" content="CoMemor Team Cloud Waitlist">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="assets/comemor-logo.png">
+  <link rel="apple-touch-icon" href="assets/comemor-logo.png">
+
+  <!-- Fonts & Stylesheet -->
+  <script src="assets/head.js?v=1.1.0"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    media="print" data-async-style>
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap">
+  </noscript>
+  <link rel="preload" as="style" href="assets/site.css?v=1.1.0">
+  <link rel="stylesheet" href="assets/site.css?v=1.1.0">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "CoMemor Team Cloud Waitlist",
+    "description": "Early access waitlist registration for CoMemor Team Cloud.",
+    "url": "https://comemor.tech/waitlist",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CoMemor",
+      "url": "https://comemor.tech/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://comemor.tech/assets/comemor-logo.png"
+      }
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip" href="#wlForm">Skip to waitlist form</a>
+
+  <!-- SVG sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z" fill="currentColor"
+          stroke="none" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap">
+      <a class="brand" href="./" aria-label="CoMemor home">
+        <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
+            fetchpriority="high"></span>
+        CoMemor <span class="ver">v1.1.0</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="./#capabilities">Capabilities</a>
+        <a href="./#tools">MCP Tools</a>
+        <a href="./#pricing">Pricing</a>
+        <a href="./#faq">FAQ</a>
+        <a href="guides/ide-setup.html">IDE Setup</a>
+        <a href="architecture.html">Architecture</a>
+      </nav>
+      <div class="nav-r">
+        <a class="star-pill" href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">
+          <svg class="i">
+            <use href="#i-star" />
+          </svg><span id="gh-stars">Star</span>
+        </a>
+        <a class="btn btn-dark" href="./#install">Get started <svg class="i arr" style="width:14px;height:14px">
+            <use href="#i-arrow" />
+          </svg></a>
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"
+          aria-controls="mmenu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mmenu">
+    <a class="ml" href="./#capabilities">Capabilities</a>
+    <a class="ml" href="./#tools">MCP Tools</a>
+    <a class="ml" href="./#pricing">Pricing</a>
+    <a class="ml" href="./#faq">FAQ</a>
+    <a class="ml" href="guides/ide-setup.html">IDE Setup Guide</a>
+    <a class="ml" href="architecture.html">Architecture Deep Dive</a>
+    <a class="btn btn-dark btn-lg" href="./#install" style="align-self:flex-start">Get started</a>
+  </div>
+
+  <main id="main">
+    <section class="wl-page" id="team-cloud-waitlist" aria-labelledby="wlTitle">
+      <div class="wrap wl-page-grid">
+        <div class="wl-page-copy">
+          <span class="wl-eyebrow"><i></i>Team Cloud · Waitlist open</span>
+          <h1>Shared memory for your engineering team.</h1>
+          <p class="lead">Keep the open-source local MCP engine you already run—and sync verified fixes across
+            teammates and repositories with strict access controls, redaction guarantees, and audit logs.</p>
+          <ul class="wl-perks">
+            <li><svg class="i">
+                <use href="#i-check" />
+              </svg><span><strong>Shared, access-controlled memory</strong> — stop teammates from debugging the same
+                failure twice.</span></li>
+            <li><svg class="i">
+                <use href="#i-check" />
+              </svg><span><strong>Cross-repo fix federation</strong> — share verified compiler, dependency, and CI
+                fixes across services.</span></li>
+            <li><svg class="i">
+                <use href="#i-check" />
+              </svg><span><strong>SSO, audit exports &amp; retention</strong> — full governance over stored memory and
+                human-in-the-loop approvals.</span></li>
+            <li><svg class="i">
+                <use href="#i-check" />
+              </svg><span><strong>Zero-trust design</strong> — secrets stripped before sync, non-executing MCP policy
+                preserved.</span></li>
+          </ul>
+          <div class="wl-page-links">
+            <a href="./#pricing">Compare Open Source vs. Team Cloud</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor/issues" target="_blank" rel="noopener">Discuss on GitHub
+              Issues</a>
+          </div>
+        </div>
+
+        <div class="wl-card wl-inline" id="wlCard">
+          <div class="wl-head">
+            <span class="wl-eyebrow"><i></i>Early access</span>
+            <h2 id="wlTitle">Join the Team Cloud waitlist</h2>
+          </div>
+          <p class="wl-lead">Tell us a little about your setup and we'll email you when Team Cloud is ready for your
+            team.</p>
+          <form class="wl-form" id="wlForm" novalidate>
+            <div class="wl-row">
+              <div class="wl-field">
+                <label for="wlFirstName">First name</label>
+                <input id="wlFirstName" name="firstName" type="text" autocomplete="given-name" placeholder="Jane"
+                  maxlength="100" required>
+                <span class="wl-err" id="wlFirstNameErr" role="alert"></span>
+              </div>
+              <div class="wl-field">
+                <label for="wlLastName">Last name</label>
+                <input id="wlLastName" name="lastName" type="text" autocomplete="family-name" placeholder="Doe"
+                  maxlength="100" required>
+                <span class="wl-err" id="wlLastNameErr" role="alert"></span>
+              </div>
+            </div>
+            <div class="wl-field">
+              <label for="wlEmail">Work email</label>
+              <input id="wlEmail" name="email" type="email" inputmode="email" autocomplete="email"
+                placeholder="you@company.com" maxlength="254" required>
+              <span class="wl-err" id="wlEmailErr" role="alert"></span>
+            </div>
+            <div class="wl-field">
+              <label for="wlTeam">Team size</label>
+              <select id="wlTeam" name="teamSize" required>
+                <option value="" disabled selected>Select team size</option>
+                <option value="1">Just me</option>
+                <option value="2-5">2–5 engineers</option>
+                <option value="6-20">6–20 engineers</option>
+                <option value="21-100">21–100 engineers</option>
+                <option value="100+">100+ engineers</option>
+              </select>
+              <span class="wl-err" id="wlTeamErr" role="alert"></span>
+            </div>
+            <div class="wl-field">
+              <label for="wlHost">Primary AI coding host</label>
+              <select id="wlHost" name="primaryHost" required>
+                <option value="" disabled selected>Select your main host</option>
+                <option value="antigravity">Google Antigravity</option>
+                <option value="claude">Claude Desktop &amp; Code</option>
+                <option value="cursor">Cursor</option>
+                <option value="windsurf">Windsurf</option>
+                <option value="vscode">VS Code + Copilot</option>
+                <option value="other">Other</option>
+              </select>
+              <span class="wl-err" id="wlHostErr" role="alert"></span>
+            </div>
+            <!-- honeypot: real users never see or fill this -->
+            <div class="wl-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" id="wlHp"
+                  tabindex="-1" autocomplete="off"></label></div>
+            <div class="wl-status err" id="wlStatus" role="alert"></div>
+            <button class="btn btn-dark btn-lg wl-submit" type="submit" id="wlSubmit">Join the waitlist</button>
+          </form>
+          <p class="wl-fine">No spam. Just a heads-up when Team Cloud launches. See our <a href="privacy-policy">Privacy
+              Policy</a>.</p>
+          <div class="wl-ok" id="wlOk" role="status" aria-live="polite">
+            <div class="tick"><svg viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+              </svg></div>
+            <h2>You're on the list.</h2>
+            <p>Thanks for joining. We'll email you as soon as Team Cloud is ready.</p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+              <a class="btn btn-dark btn-lg" href="./">Back to CoMemor</a>
+              <button class="btn btn-line btn-lg" type="button" id="wlDone">Submit another</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <a class="brand" href="./">
+            <span class="logo"><img src="assets/comemor-logo.webp" alt="CoMemor logo" width="32" height="32"
+                loading="lazy"></span>
+            CoMemor
+          </a>
+          <p>Persistent engineering memory for AI coding agents.</p>
+        </div>
+        <div class="cols">
+          <div>
+            <h2>Product</h2>
+            <a href="./#capabilities">Capabilities</a>
+            <a href="./#tools">MCP Tools</a>
+            <a href="./#pricing">Pricing</a>
+            <a href="waitlist">Team Cloud Waitlist</a>
+            <a href="./#faq">FAQ</a>
+          </div>
+          <div>
+            <h2>Guides &amp; Docs</h2>
+            <a href="guides/ide-setup.html">IDE Setup Guide</a>
+            <a href="docs/cursor-mcp-setup.html">Cursor MCP Setup</a>
+            <a href="docs/claude-code-setup.html">Claude Code Setup</a>
+            <a href="architecture.html">Architecture Deep Dive</a>
+            <a href="docs/threat-model.html">Security &amp; Threat Model</a>
+          </div>
+          <div>
+            <h2>Community &amp; Legal</h2>
+            <a href="https://github.com/PrasannaSaiS/CoMemor" target="_blank" rel="noopener">GitHub Repository</a>
+            <a href="https://www.npmjs.com/package/comemor" target="_blank" rel="noopener">npm Package</a>
+            <a href="privacy-policy">Privacy Policy</a>
+            <a href="llms.txt">llms.txt</a>
+            <a href="https://github.com/PrasannaSaiS/CoMemor/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0
+              License</a>
+          </div>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© <span id="yr">2026</span> CoMemor · Open source under GPL-3.0-only · <a href="privacy-policy"
+            style="color:inherit;text-decoration:underline">Privacy Policy</a></span>
+        <span>Built in the open, for agents that remember.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script defer src="assets/main.js?v=1.1.0"></script>
+</body>
+
+</html>

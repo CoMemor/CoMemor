@@ -438,7 +438,7 @@ const CONFIG = {
 })();
 
 /* =====================================================================
-   WAITLIST MODAL
+   WAITLIST MODAL & DIRECT PAGE CONTROLLER
    ===================================================================== */
 (function () {
   'use strict';
@@ -447,42 +447,90 @@ const CONFIG = {
     userGroup: 'team-cloud-waitlist',
     source: 'comemor-waitlist'
   };
-  const dlg = document.getElementById('wlDialog');
-  if (!dlg) return;
   const $ = id => document.getElementById(id);
+  const dlg = $('wlDialog');
   const form = $('wlForm'), card = $('wlCard'), submit = $('wlSubmit'), status = $('wlStatus');
+  if (!form || !card || !submit || !status) return;
+
   const fields = {
+    firstName: { el: $('wlFirstName'), err: $('wlFirstNameErr') },
+    lastName: { el: $('wlLastName'), err: $('wlLastNameErr') },
     email: { el: $('wlEmail'), err: $('wlEmailErr') },
     teamSize: { el: $('wlTeam'), err: $('wlTeamErr') },
     primaryHost: { el: $('wlHost'), err: $('wlHostErr') }
   };
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const hasNative = typeof dlg.showModal === 'function';
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasNative = dlg && typeof dlg.showModal === 'function';
   let lastTrigger = null, busy = false;
+
+  function focusFirstField() {
+    const first = fields.firstName.el || fields.email.el;
+    if (first && first.focus) first.focus();
+  }
 
   function open(trigger) {
     lastTrigger = trigger || null;
-    if (hasNative) { if (!dlg.open) dlg.showModal(); }
-    else { dlg.setAttribute('open', ''); dlg.classList.add('wl-fallback'); }
-    document.body.classList.add('wl-open');
-    setTimeout(() => fields.email.el.focus(), 30);
+    if (dlg) {
+      if (hasNative) { if (!dlg.open) dlg.showModal(); }
+      else { dlg.setAttribute('open', ''); dlg.classList.add('wl-fallback'); }
+      document.body.classList.add('wl-open');
+    }
+    setTimeout(focusFirstField, 30);
   }
   function close() {
-    if (hasNative) { if (dlg.open) dlg.close(); }
-    else { dlg.removeAttribute('open'); dlg.classList.remove('wl-fallback'); }
-    document.body.classList.remove('wl-open');
-    if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+    if (dlg) {
+      if (hasNative) { if (dlg.open) dlg.close(); }
+      else { dlg.removeAttribute('open'); dlg.classList.remove('wl-fallback'); }
+      document.body.classList.remove('wl-open');
+      if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+    } else {
+      card.classList.remove('done');
+      setStatus('');
+      focusFirstField();
+    }
   }
-  document.querySelectorAll('[data-wl-open]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); open(a); }));
-  $('wlClose').addEventListener('click', close);
-  $('wlDone').addEventListener('click', close);
-  dlg.addEventListener('close', () => document.body.classList.remove('wl-open'));
-  dlg.addEventListener('click', e => { if (e.target === dlg || e.target === $('wlShell')) close(); });
-  if (!hasNative) addEventListener('keydown', e => { if (e.key === 'Escape' && dlg.hasAttribute('open')) close(); });
+
+  if (dlg) {
+    document.querySelectorAll('[data-wl-open]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); open(a); }));
+    const closeBtn = $('wlClose');
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    dlg.addEventListener('close', () => document.body.classList.remove('wl-open'));
+    dlg.addEventListener('click', e => { if (e.target === dlg || e.target === $('wlShell')) close(); });
+    if (!hasNative) addEventListener('keydown', e => { if (e.key === 'Escape' && dlg.hasAttribute('open')) close(); });
+  } else {
+    setTimeout(focusFirstField, 60);
+  }
+  const doneBtn = $('wlDone');
+  if (doneBtn) doneBtn.addEventListener('click', close);
+
+  function handleWaitlistAnchor() {
+    const h = window.location.hash;
+    if (h !== '#team-cloud-waitlist' && h !== '#waitlist') return;
+    const target = $('team-cloud-waitlist') || $('pricing');
+    if (target) {
+      target.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' });
+      target.classList.add('wl-highlight');
+      setTimeout(() => target.classList.remove('wl-highlight'), 2400);
+    }
+    if (dlg) open();
+  }
+  if (window.location.hash === '#team-cloud-waitlist' || window.location.hash === '#waitlist') {
+    setTimeout(handleWaitlistAnchor, 80);
+  }
+  addEventListener('hashchange', handleWaitlistAnchor);
 
   function check(name) {
-    const f = fields[name], v = f.el.value.trim(); let msg = '';
-    if (name === 'email') {
+    const f = fields[name];
+    if (!f || !f.el) return true;
+    const v = f.el.value.trim(); let msg = '';
+    if (name === 'firstName') {
+      if (!v) msg = 'Please enter your first name.';
+      else if (v.length > 100) msg = 'First name must be 100 characters or fewer.';
+    } else if (name === 'lastName') {
+      if (!v) msg = 'Please enter your last name.';
+      else if (v.length > 100) msg = 'Last name must be 100 characters or fewer.';
+    } else if (name === 'email') {
       if (!v) msg = 'Please enter your email address.';
       else if (v.length > 254 || !EMAIL_RE.test(v)) msg = 'Please enter a valid email address.';
     } else if (!v) {
@@ -495,9 +543,11 @@ const CONFIG = {
     return !msg;
   }
   Object.keys(fields).forEach(n => {
-    fields[n].el.addEventListener('blur', () => { if (fields[n].el.value || fields[n].el.closest('.wl-field').classList.contains('bad')) check(n); });
-    fields[n].el.addEventListener('input', () => { if (fields[n].el.closest('.wl-field').classList.contains('bad')) check(n); });
-    fields[n].el.addEventListener('change', () => check(n));
+    const f = fields[n];
+    if (!f || !f.el) return;
+    f.el.addEventListener('blur', () => { if (f.el.value || f.el.closest('.wl-field').classList.contains('bad')) check(n); });
+    f.el.addEventListener('input', () => { if (f.el.closest('.wl-field').classList.contains('bad')) check(n); });
+    f.el.addEventListener('change', () => check(n));
   });
   function setStatus(msg) { status.textContent = msg || ''; status.classList.toggle('show', !!msg); }
   function setBusy(b) { busy = b; submit.disabled = b; submit.textContent = b ? 'Joining\u2026' : 'Join the waitlist'; }
@@ -508,18 +558,20 @@ const CONFIG = {
     setStatus('');
     const results = Object.keys(fields).map(check);
     if (results.includes(false)) {
-      const first = Object.keys(fields).find(n => fields[n].el.getAttribute('aria-invalid') === 'true');
+      const first = Object.keys(fields).find(n => fields[n].el && fields[n].el.getAttribute('aria-invalid') === 'true');
       if (first) fields[first].el.focus();
       return;
     }
-    if ($('wlHp').value) { card.classList.add('done'); return; }
+    if ($('wlHp') && $('wlHp').value) { card.classList.add('done'); return; }
 
     const data = new FormData(form);
     const body = new URLSearchParams({
-      email: String(data.get('email')).trim().toLowerCase(),
-      teamSize: data.get('teamSize'),
-      primaryHost: data.get('primaryHost'),
-      website: $('wlHp').value || '',
+      firstName: String(data.get('firstName') || '').trim(),
+      lastName: String(data.get('lastName') || '').trim(),
+      email: String(data.get('email') || '').trim().toLowerCase(),
+      teamSize: String(data.get('teamSize') || ''),
+      primaryHost: String(data.get('primaryHost') || ''),
+      website: ($('wlHp') && $('wlHp').value) || '',
       userGroup: WAITLIST_CONFIG.userGroup,
       source: WAITLIST_CONFIG.source
     }).toString();

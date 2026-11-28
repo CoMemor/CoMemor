@@ -757,7 +757,7 @@
                 <use href="#i-arrow" />
               </svg></a>
           </article>
-          <article class="price soon rv" style="--d:1" data-spot>
+          <article class="price soon rv" id="team-cloud-waitlist" style="--d:1" data-spot>
             <span class="eyebrow"><i class="soon"></i>Waitlist open</span>
             <h3>Team Cloud</h3>
             <div class="amt">Soon</div>
@@ -932,6 +932,7 @@
             <a href="#capabilities">Capabilities</a>
             <a href="#tools">MCP Tools</a>
             <a href="#pricing">Pricing</a>
+            <a href="waitlist">Team Cloud Waitlist</a>
             <a href="#faq">FAQ</a>
           </div>
           <div>
@@ -987,6 +988,20 @@
         <p class="wl-lead">Shared, access-controlled memory for your whole team. Tell us a little about your setup and
           we'll email you when it's ready.</p>
         <form class="wl-form" id="wlForm" novalidate>
+          <div class="wl-row">
+            <div class="wl-field">
+              <label for="wlFirstName">First name</label>
+              <input id="wlFirstName" name="firstName" type="text" autocomplete="given-name"
+                placeholder="Jane" maxlength="100" required>
+              <span class="wl-err" id="wlFirstNameErr" role="alert"></span>
+            </div>
+            <div class="wl-field">
+              <label for="wlLastName">Last name</label>
+              <input id="wlLastName" name="lastName" type="text" autocomplete="family-name"
+                placeholder="Doe" maxlength="100" required>
+              <span class="wl-err" id="wlLastNameErr" role="alert"></span>
+            </div>
+          </div>
           <div class="wl-field">
             <label for="wlEmail">Work email</label>
             <input id="wlEmail" name="email" type="email" inputmode="email" autocomplete="email"

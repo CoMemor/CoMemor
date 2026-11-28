@@ -20,6 +20,7 @@ CoMemor runs locally over stdio JSON-RPC (Node.js >= 22.5.0 using built-in `node
 ## Documentation & Guides
 
 - [Homepage](https://comemor.tech/): Overview, live retrieval proof, and MCP contract summary.
+- [Team Cloud Waitlist](https://comemor.tech/waitlist): Direct waitlist registration for CoMemor Team Cloud (`/waitlist` or `/team-cloud`).
 - [IDE Setup Guide](https://comemor.tech/guides/ide-setup.html): Step-by-step setup for Cursor, Claude Desktop, VS Code, Windsurf, and Google Antigravity.
 - [Cursor MCP Setup](https://comemor.tech/docs/cursor-mcp-setup.html): `.cursor/mcp.json` and `.cursor/rules` setup for Cursor IDE.
 - [Claude Code Setup](https://comemor.tech/docs/claude-code-setup.html): CLI and `CLAUDE.md` configuration for Claude Code & Claude Desktop.

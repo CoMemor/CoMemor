@@ -78,15 +78,29 @@ export default {
       }
 
       const email = String(data.email || '').trim().toLowerCase();
+      const firstName = String(data.firstName || '').trim();
+      const lastName = String(data.lastName || '').trim();
       const teamSize = String(data.teamSize || '').trim();
       const primaryHost = String(data.primaryHost || '').trim();
 
-      if (!email || email.length > 254 || !EMAIL_RE.test(email) || !teamSize || !primaryHost) {
+      if (
+        !email ||
+        email.length > 254 ||
+        !EMAIL_RE.test(email) ||
+        !firstName ||
+        firstName.length > 100 ||
+        !lastName ||
+        lastName.length > 100 ||
+        !teamSize ||
+        !primaryHost
+      ) {
         return withSecurityHeaders(Response.json({ success: false, message: 'Please complete all required fields.' }, { status: 400 }));
       }
 
       const payload = new URLSearchParams({
         email,
+        firstName,
+        lastName,
         teamSize,
         primaryHost,
         userGroup: 'team-cloud-waitlist',
@@ -105,6 +119,20 @@ export default {
         status: upstream.status,
         headers: { 'Content-Type': 'application/json' }
       }));
+    }
+
+    if (
+      (request.method === 'GET' || request.method === 'HEAD') &&
+      (url.pathname === '/waitlist' ||
+        url.pathname === '/waitlist/' ||
+        url.pathname === '/team-cloud' ||
+        url.pathname === '/team-cloud/')
+    ) {
+      const assetUrl = new URL('/waitlist.html', url.origin);
+      const assetResponse = await env.ASSETS.fetch(
+        new Request(assetUrl.toString(), { method: request.method, headers: request.headers }),
+      );
+      return withSecurityHeaders(assetResponse);
     }
 
     const assetResponse = await env.ASSETS.fetch(request);
